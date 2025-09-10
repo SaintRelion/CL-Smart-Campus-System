@@ -1,5 +1,5 @@
-import type { StudentAttendanceDatesProps } from "@/models/attendance-data";
-import type { EnrolledClassesProps } from "@/models/student-data";
+import type { AttendanceLogsProps } from "@/models/attendance";
+import type { EnrolledClassesProps } from "@/models/enrolled-classes";
 
 export const enrolledClasses: EnrolledClassesProps[] = [
   { id: 1, userId: 1, classId: 1 },
@@ -12,10 +12,11 @@ export const enrolledClasses: EnrolledClassesProps[] = [
   { id: 8, userId: 1, classId: 5 },
 ];
 
-export const allStudentAttendanceData: StudentAttendanceDatesProps[] = [
+export const allStudentAttendanceData: AttendanceLogsProps[] = [
   {
     id: 1,
     userId: 1,
+    userType: "student",
     classId: 1,
     time: "2025-08-18T08:30",
     status: "present",
@@ -23,6 +24,7 @@ export const allStudentAttendanceData: StudentAttendanceDatesProps[] = [
   {
     id: 2,
     userId: 2,
+    userType: "student",
     classId: 1,
     time: "2025-08-18T08:30",
     status: "missed",
@@ -30,6 +32,7 @@ export const allStudentAttendanceData: StudentAttendanceDatesProps[] = [
   {
     id: 3,
     userId: 3,
+    userType: "student",
     classId: 2,
     time: "2025-08-19T10:00",
     status: "present",
@@ -37,6 +40,7 @@ export const allStudentAttendanceData: StudentAttendanceDatesProps[] = [
   {
     id: 4,
     userId: 4,
+    userType: "student",
     classId: 2,
     time: "2025-08-19T10:00",
     status: "missed",
@@ -44,6 +48,7 @@ export const allStudentAttendanceData: StudentAttendanceDatesProps[] = [
   {
     id: 5,
     userId: 5,
+    userType: "student",
     classId: 3,
     time: "2025-08-22T14:00",
     status: "present",
@@ -51,6 +56,7 @@ export const allStudentAttendanceData: StudentAttendanceDatesProps[] = [
   {
     id: 6,
     userId: 1,
+    userType: "student",
     classId: 5,
     time: "2025-08-22T13:30",
     status: "no-class",
@@ -58,6 +64,7 @@ export const allStudentAttendanceData: StudentAttendanceDatesProps[] = [
   {
     id: 7,
     userId: 2,
+    userType: "student",
     classId: 7,
     time: "2025-08-21T11:15",
     status: "late",
@@ -65,6 +72,7 @@ export const allStudentAttendanceData: StudentAttendanceDatesProps[] = [
   {
     id: 8,
     userId: 6,
+    userType: "student",
     classId: 5,
     time: "2025-08-26T13:40",
     status: "late",

@@ -1,6 +1,7 @@
 import type { UserRole } from "./userrole";
 
-export interface Users {
+export interface User {
+  firebaseID?: string;
   id: number;
   name: string;
   role: UserRole;

@@ -20,8 +20,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Check, X } from "lucide-react";
-import type { InstructorAttendanceDatesProps } from "@/models/attendance-data";
 import { useAuth } from "@saintrelion/auth-lib";
+import type { AttendanceLogsProps } from "@/models/attendance";
 
 const dayMap: Record<string, number> = {
   Sunday: 0,
@@ -143,15 +143,14 @@ const InstructorAttendanceRecordPage = () => {
                                   {/* ✅ Mark Present */}
                                   <button
                                     onClick={() => {
-                                      const newRecord: InstructorAttendanceDatesProps =
-                                        {
-                                          id:
-                                            instructorAttendanceData.length + 1,
-                                          userId: user.id, // instructor id
-                                          classId: icl.id,
-                                          time: new Date().toISOString(),
-                                          status: "present",
-                                        };
+                                      const newRecord: AttendanceLogsProps = {
+                                        id: instructorAttendanceData.length + 1,
+                                        userId: user.id, // instructor id
+                                        userType: "instructor",
+                                        classId: icl.id,
+                                        time: new Date().toISOString(),
+                                        status: "present",
+                                      };
 
                                       setInstructorAttendanceData((prev) => {
                                         const formattedSelected = format(
@@ -196,16 +195,15 @@ const InstructorAttendanceRecordPage = () => {
                                         prompt("Reason for no class?") ||
                                         "unspecified";
 
-                                      const newRecord: InstructorAttendanceDatesProps =
-                                        {
-                                          id:
-                                            instructorAttendanceData.length + 1,
-                                          userId: user.id, // instructor id
-                                          classId: icl.id,
-                                          time: new Date().toISOString(),
-                                          status: "no-class",
-                                          reason,
-                                        };
+                                      const newRecord: AttendanceLogsProps = {
+                                        id: instructorAttendanceData.length + 1,
+                                        userId: user.id, // instructor id
+                                        userType: "instructor",
+                                        classId: icl.id,
+                                        time: new Date().toISOString(),
+                                        status: "no-class",
+                                        reason,
+                                      };
 
                                       setInstructorAttendanceData((prev) => {
                                         const formattedSelected = format(
@@ -311,6 +309,7 @@ const InstructorAttendanceRecordPage = () => {
                                                   {
                                                     id: newId,
                                                     userId: student.userId,
+                                                    userType: "student",
                                                     classId: icl.id,
                                                     time: new Date().toISOString(), // store as ISO string
                                                     status: "present",
@@ -334,6 +333,7 @@ const InstructorAttendanceRecordPage = () => {
                                                   {
                                                     id: newId,
                                                     userId: student.userId,
+                                                    userType: "student",
                                                     classId: icl.id,
                                                     time: new Date().toISOString(), // store as ISO string
                                                     status: "missed",

@@ -1,8 +1,6 @@
-import type { InstructorAttendanceDatesProps } from "@/models/attendance-data";
-import type {
-  ClassesProps,
-  ClassesNotificationsProps,
-} from "@/models/classes-instructor";
+import type { AttendanceLogsProps } from "@/models/attendance";
+import type { ClassesProps } from "@/models/classes-instructor";
+import type { ClassesNotificationsProps } from "@/models/classes-notifications";
 
 export const allInstructorClasses: ClassesProps[] = [
   {
@@ -103,10 +101,11 @@ export const classesNotifications: ClassesNotificationsProps[] = [
   },
 ];
 
-export const allInstructorAttendanceData: InstructorAttendanceDatesProps[] = [
+export const allInstructorAttendanceData: AttendanceLogsProps[] = [
   {
     id: 1,
     userId: 10,
+    userType: "instructor",
     classId: 1,
     time: "2025-08-18T08:30",
     status: "present",
@@ -114,6 +113,7 @@ export const allInstructorAttendanceData: InstructorAttendanceDatesProps[] = [
   {
     id: 2,
     userId: 15,
+    userType: "instructor",
     classId: 1,
     time: "2025-08-18T08:30",
     status: "missed",
@@ -121,6 +121,7 @@ export const allInstructorAttendanceData: InstructorAttendanceDatesProps[] = [
   {
     id: 3,
     userId: 12,
+    userType: "instructor",
     classId: 5,
     time: "2025-08-19T10:00",
     status: "present",

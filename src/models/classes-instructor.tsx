@@ -1,4 +1,5 @@
 export interface ClassesProps {
+  firebaseID?: string;
   id: number;
   userId: number;
   title: string;
@@ -8,10 +9,4 @@ export interface ClassesProps {
   room?: string;
 }
 
-export interface ClassesNotificationsProps {
-  id: number;
-  classId: number;
-  type: "room_change" | "cancellation" | "instructor_absence";
-  message: string;
-  date: string; // ISO for when it applies
-}
+
