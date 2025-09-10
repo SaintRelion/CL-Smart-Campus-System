@@ -10,9 +10,9 @@ import { formatYYYYMMDDTime } from "@/lib/mydate";
 import { allInstructorClasses } from "@/data/mock-classes-instructor";
 
 const StudentAttendanceRecordPage = () => {
-  const [selectedClassId, setSelectedClassId] = useState<string | null>(null);
+  const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
 
-  const userId = "1";
+  const userId = 1;
   const myClassesEnrolled = enrolledClasses.filter(
     (ecl) => ecl.userId == userId,
   );
@@ -72,11 +72,9 @@ const StudentAttendanceRecordPage = () => {
                         ? "bg-red-400/40"
                         : a.status === "late"
                           ? "bg-yellow-200/70"
-                          : a.status === "locked"
+                          : a.status === "no-class"
                             ? "bg-gray-200/70"
-                            : a.status === "upcoming"
-                              ? "bg-blue-200/70"
-                              : "bg-green-200/70"
+                            : "bg-green-200/70"
                     }`}
                   >
                     <span className="capitalize">{a.status}</span>

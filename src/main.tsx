@@ -10,10 +10,9 @@ import AttendanceRecordPage from "./pages/attendance-record/AttendanceRecordPage
 import ProfilePage from "./pages/profile/ProfilePage";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider } from "@saintrelion/auth-lib";
+import { AuthProvider, ProtectedRoute } from "@saintrelion/auth-lib";
 import LoginPage from "./pages/authentication/LoginPage";
 import RegistrationPage from "./pages/authentication/RegistrationPage";
-import { ProtectedRoute } from "./temp";
 
 export const router = createBrowserRouter([
   {

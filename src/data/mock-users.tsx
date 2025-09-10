@@ -1,6 +1,6 @@
-import type { Users } from "@/models/users";
+import type { User } from "@/models/user";
 
-export const users: Users[] = [
+export const users: User[] = [
   { id: 1, name: "Alice Student", role: "student" },
   { id: 2, name: "Bob Student", role: "student" },
   { id: 3, name: "Charlie Student", role: "student" },
