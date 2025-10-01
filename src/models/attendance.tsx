@@ -1,9 +1,8 @@
-export interface AttendanceLogsProps {
-  firebaseID?: string;
-  id: number;
-  userId: number;
+export interface AttendanceLogs {
+  id: string;
+  userID: string;
   userType: string;
-  classId: number;
+  classID: string;
   time: string;
   status: "present" | "missed" | "late" | "no-class";
   reason?: string;

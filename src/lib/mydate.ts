@@ -31,7 +31,7 @@ export function formatDateToOnlyTime(time: string): string {
   });
 }
 
-export function formatTime(time: string): string {
+export function formatTime24To12(time: string): string {
   // "13:00" -> "1:00 PM"
   const [h, m] = time.split(":").map(Number);
   const ampm = h >= 12 ? "PM" : "AM";

@@ -1,18 +1,21 @@
+import { initializeFirebaseAuth } from "@saintrelion/auth-lib";
+import { initializeFirestore } from "@saintrelion/data-access-layer";
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyD-NJV6IuCqV_wyHpUFHlvtwqEBLMXBtFE",
-  authDomain: "ojt-attendance-system-3ec21.firebaseapp.com",
-  projectId: "ojt-attendance-system-3ec21",
-  storageBucket: "ojt-attendance-system-3ec21.firebasestorage.app",
-  messagingSenderId: "931813739421",
-  appId: "1:931813739421:web:e14053362b8efcd3e9bd74",
-  measurementId: "G-EVCP5V984B",
+  apiKey: "AIzaSyCVgLFgh9M8ey8v5hRjSZjDN3LfAv-oV6M",
+  authDomain: "c-project-s.firebaseapp.com",
+  projectId: "c-project-s",
+  storageBucket: "c-project-s.firebasestorage.app",
+  messagingSenderId: "287832751396",
+  appId: "1:287832751396:web:54f2411e12220c180547b1",
+  measurementId: "G-Y1ZZ8L3T30",
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+
+initializeFirestore(app);
+initializeFirebaseAuth(app);

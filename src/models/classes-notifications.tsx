@@ -1,8 +1,8 @@
-export interface ClassesNotificationsProps {
-  firebaseID?: string;
-  id: number;
-  classId: number;
-  type: "room_change" | "cancellation" | "instructor_absence";
+export interface ClassesNotifications {
+  id: string;
+  classID: string;
+  type: "room_change" | "time_change" | "cancellation" | "instructor_absence";
   message: string;
-  date: string; // ISO for when it applies
+  date: string;
+  time: string;
 }

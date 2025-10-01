@@ -1,51 +1,33 @@
-import { db } from "@/lib/firebase-client";
-import type { AttendanceLogsProps } from "@/models/attendance";
+import type { AttendanceLogs } from "@/models/attendance";
 import {
-  collection,
-  doc,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-} from "firebase/firestore";
+  apiRegister,
+  firebaseRegister,
+  mockRegister,
+} from "@saintrelion/data-access-layer";
 
-const COLLECTION = "attendanceLogs";
+// Firebase
+firebaseRegister("AttendanceLogs");
 
-// --- SELECT ---
-export async function selectAttendanceLogs(): Promise<AttendanceLogsProps[]> {
-  const snapshot = await getDocs(collection(db, COLLECTION));
-  return snapshot.docs.map((d) => ({
-    ...(d.data() as AttendanceLogsProps),
-    firebaseID: d.id,
-  }));
-}
+// API
+apiRegister("AttendanceLogs", "attendancelogs");
 
-// --- INSERT ---
-export async function insertAttendanceLog(
-  cls: Omit<AttendanceLogsProps, "id" | "firebaseID">,
-): Promise<string> {
-  const colRef = collection(db, COLLECTION);
-  const docRef = await addDoc(colRef, cls);
-  return docRef.id;
-}
-
-// --- UPDATE ---
-export async function updateAttendanceLog(
-  firebaseID: string,
-  updates: Partial<AttendanceLogsProps>,
-): Promise<void> {
-  const docRef = doc(db, COLLECTION, firebaseID);
-  await updateDoc(docRef, updates);
-}
-
-// ARCHIVE (soft delete)
-export async function archiveAttendanceLog(firebaseId: string): Promise<void> {
-  const docRef = doc(db, COLLECTION, firebaseId);
-  await updateDoc(docRef, { archived: true });
-}
-
-// --- DELETE (hard delete) ---
-export async function deleteAttendanceLog(firebaseID: string): Promise<void> {
-  const docRef = doc(db, COLLECTION, firebaseID);
-  await deleteDoc(docRef);
-}
+// Mock
+mockRegister<AttendanceLogs>("AttendanceLogs", [
+  {
+    id: "1",
+    userID: "1",
+    userType: "student",
+    classID: "1",
+    time: "2025-10-01T08:00:00Z",
+    status: "present",
+  },
+  {
+    id: "2",
+    userID: "2",
+    userType: "student",
+    classID: "1",
+    time: "2025-10-01T08:00:00Z",
+    status: "late",
+    reason: "Traffic",
+  },
+]);
