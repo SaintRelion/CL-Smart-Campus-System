@@ -1,22 +1,34 @@
-import { allInstructorClasses } from "@/data/mock-classes-instructor";
-import { formatTime } from "@/lib/mydate";
-import type { ClassesProps } from "@/models/classes-instructor";
+import { formatTime24To12 } from "@/lib/mydate";
+import type { Classes } from "@/models/classes";
 import { useAuth } from "@saintrelion/auth-lib";
+import { useDBOperations } from "@saintrelion/data-access-layer";
 import { useEffect, useState } from "react";
 
 const InstructorDashboardPage = () => {
   const { user } = useAuth();
 
-  const [todayClasses, setTodayClasses] = useState<ClassesProps[]>([]);
+  // hook from repository
+  const { useSelect: classesSelect } = useDBOperations<Classes>("Classes");
+
+  // fetch all classes for this instructor
+  const { data: instructorClasses = [] } = classesSelect({
+    firebaseOptions: { filterField: "userID", value: user.id },
+    mockOptions: { filterFn: (cls) => cls.userID === user.id },
+    apiOptions: { params: { userId: user.id } },
+  });
+
+  const [todayClasses, setTodayClasses] = useState<Classes[]>([]);
   const [alert, setAlert] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!instructorClasses.length) return;
+
     const now = new Date();
     const today = now.toLocaleDateString("en-US", { weekday: "long" }); // e.g. "Monday"
 
     // Filter classes by instructor and today's day
-    const todays = allInstructorClasses
-      .filter((cls) => cls.userId === user.id && cls.days.includes(today))
+    const todays = instructorClasses
+      .filter((cls) => cls.days.includes(today))
       .sort((a, b) => (a.time > b.time ? 1 : -1)); // sort by start time
 
     setTodayClasses(todays);
@@ -31,11 +43,11 @@ const InstructorDashboardPage = () => {
 
       if (diffMinutes > 0 && diffMinutes <= 15) {
         setAlert(
-          `Your ${formatTime(cls.time)} class "${cls.title}" starts in ${Math.round(diffMinutes)} minutes`,
+          `Your ${formatTime24To12(cls.time)} class "${cls.title}" starts in ${Math.round(diffMinutes)} minutes`,
         );
       }
     });
-  }, [user.id]);
+  }, [instructorClasses]);
 
   return (
     <div className="space-y-6 p-6">
@@ -62,7 +74,9 @@ const InstructorDashboardPage = () => {
               >
                 <div className="flex items-center justify-between">
                   <span className="font-medium">{cls.title}</span>
-                  <span className="text-gray-600">{formatTime(cls.time)}</span>
+                  <span className="text-gray-600">
+                    {formatTime24To12(cls.time)}
+                  </span>
                 </div>
                 <p className="text-sm text-gray-500">{cls.code}</p>
               </li>

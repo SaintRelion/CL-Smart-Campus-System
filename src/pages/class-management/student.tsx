@@ -15,15 +15,42 @@ import {
 
 import { BookIcon } from "lucide-react";
 
-import { enrolledClasses } from "@/data/mock-student-data";
-import { allInstructorClasses } from "@/data/mock-classes-instructor";
 import { useAuth } from "@saintrelion/auth-lib";
+import type { EnrolledClasses } from "@/models/enrolled-classes";
+import { useDBOperations } from "@saintrelion/data-access-layer";
+import type { Classes } from "@/models/classes";
 
 const StudentClassManagement = () => {
   const { user } = useAuth();
-  const myClassesEnrolled = enrolledClasses.filter(
-    (ecl) => ecl.userId == user.id,
-  );
+
+  // DB Operations
+  const { useSelect: enrolledSelect, useInsert: enrolledInsert } =
+    useDBOperations<EnrolledClasses>("EnrolledClasses");
+  const { useSelect: classesSelect } = useDBOperations<Classes>("Classes");
+
+  // Queries
+  const { data: enrolled = [] } = enrolledSelect({
+    firebaseOptions: { filterField: "userID", value: user.id },
+    mockOptions: { filterFn: (e) => e.userID === user.id },
+  });
+
+  const { data: allClasses = [] } = classesSelect();
+
+  // Join Class handler
+  const handleJoinClass = (code: string, closeDialog: () => void) => {
+    const foundClass = allClasses.find((cls) => cls.code === code.trim());
+    if (!foundClass) {
+      alert("Class code not found.");
+      return;
+    }
+
+    enrolledInsert.mutate({
+      userID: user.id,
+      classID: foundClass.id,
+    });
+
+    closeDialog();
+  };
 
   return (
     <div className="space-y-6">
@@ -34,19 +61,17 @@ const StudentClassManagement = () => {
             <BookIcon className="text-primary h-5 w-5" />
             <CardTitle className="text-lg">Enrolled Classes</CardTitle>
           </div>
-          <JoinClassButton />
+          <JoinClassButton onJoin={handleJoinClass} />
         </CardHeader>
         <CardContent>
-          {myClassesEnrolled.length > 0 ? (
+          {enrolled.length > 0 ? (
             <ul className="text-md space-y-2">
-              {myClassesEnrolled.map((ecl, idx) => {
-                const classInfo = allInstructorClasses.find(
-                  (c) => c.id == ecl.classId,
-                );
+              {enrolled.map((ecl) => {
+                const classInfo = allClasses.find((c) => c.id === ecl.classID);
 
                 return (
                   <li
-                    key={idx}
+                    key={ecl.id}
                     className="bg-muted/20 hover:bg-muted flex items-center justify-between rounded-md px-2 py-1 transition"
                   >
                     <span className="font-medium">{classInfo?.title}</span>
@@ -69,16 +94,20 @@ const StudentClassManagement = () => {
 };
 export default StudentClassManagement;
 
-export function JoinClassButton() {
+export function JoinClassButton({
+  onJoin,
+}: {
+  onJoin: (code: string, closeDialog: () => void) => void;
+}) {
   const [code, setCode] = useState("");
   const [open, setOpen] = useState(false);
 
-  const handleJoin = () => {
+  const handleConfirm = () => {
     if (!code.trim()) return;
-    alert("Joining class with code:" + code);
-    // TODO: Call API here
-    setCode("");
-    setOpen(false);
+    onJoin(code, () => {
+      setCode("");
+      setOpen(false);
+    });
   };
 
   return (
@@ -103,7 +132,7 @@ export function JoinClassButton() {
           />
         </div>
         <DialogFooter>
-          <Button onClick={handleJoin}>Join</Button>
+          <Button onClick={handleConfirm}>Join</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

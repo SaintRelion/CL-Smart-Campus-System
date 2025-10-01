@@ -3,9 +3,8 @@ import { useState } from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { useAuth } from "@saintrelion/auth-lib";
+import { firebaseLoginWithEmail, useAuth } from "@saintrelion/auth-lib";
 import { Link, useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
@@ -14,18 +13,25 @@ const LoginPage = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("student");
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     // Normally you'd call API here, then save returned user
-    setUser({
-      id: 14, // fake user id
-      email,
-      role,
-      department: "IT",
+
+    await firebaseLoginWithEmail(email, password, setUser, (loggedInUser) => {
+      if (loggedInUser.role == "superadmin")
+        navigate("/departmentadvisers"); // redirect to dashboard
+      else navigate("/");
+
+      console.log(loggedInUser);
+      console.log(loggedInUser.createdAt.toDate());
     });
 
-    navigate("/"); // redirect to dashboard
+    // await firebaseLoginWithGoogle(setUser, (loggedInUser) => {
+    //   if (loggedInUser.role == "superadmin")
+    //     navigate("/departmentadvisers"); // redirect to dashboard
+    //   else navigate("/");
+    //   console.log(loggedInUser);
+    // });
   };
 
   return (
@@ -37,15 +43,6 @@ const LoginPage = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
-          <Tabs value={role} onValueChange={setRole} className="w-full">
-            <TabsList className="w-full">
-              <TabsTrigger value="superadmin">Super</TabsTrigger>
-              <TabsTrigger value="departmentadmin">Dept</TabsTrigger>
-              <TabsTrigger value="instructor">Instr</TabsTrigger>
-              <TabsTrigger value="student">Stud</TabsTrigger>
-            </TabsList>
-          </Tabs>
-
           <Input
             type="email"
             placeholder="Email"

@@ -1,17 +1,52 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatTime24To12, formatYYYYMMDDTime } from "@/lib/mydate";
+import type { AttendanceLogs } from "@/models/attendance";
+import type { Classes } from "@/models/classes";
+import type { ClassesNotifications } from "@/models/classes-notifications";
+import type { EnrolledClasses } from "@/models/enrolled-classes";
+import { useAuth } from "@saintrelion/auth-lib";
+import { useDBOperations } from "@saintrelion/data-access-layer";
+import { BanIcon, CalendarIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
-import { allStudentAttendanceData } from "@/data/mock-student-data";
-import {
-  allInstructorClasses,
-  classesNotifications,
-} from "@/data/mock-classes-instructor";
-
-import { BanIcon, CalendarIcon } from "lucide-react";
-
-import { formatTime, formatYYYYMMDDTime } from "@/lib/mydate";
-
 export default function StudentDashboard() {
+  const { user } = useAuth();
+
+  // hook up repos
+  const { useSelect: classesSelect } = useDBOperations<Classes>("Classes");
+  const { useSelect: enrolledSelect } =
+    useDBOperations<EnrolledClasses>("EnrolledClasses");
+  const { useSelect: attendanceSelect } =
+    useDBOperations<AttendanceLogs>("AttendanceLogs");
+  const { useSelect: notificationSelect } =
+    useDBOperations<ClassesNotifications>("ClassesNotifications");
+
+  // get data
+  const { data: allClasses = [] } = classesSelect();
+  const { data: enrolledClasses = [] } = enrolledSelect({
+    firebaseOptions: { filterField: "userID", value: user.id },
+  });
+  const { data: attendanceLogs = [] } = attendanceSelect({
+    firebaseOptions: { filterField: "userID", value: user.id },
+  });
+
+  const todayAsString = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+  });
+  const todayISODate = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+  const { data: notifications = [] } = notificationSelect();
+
+  // map enrolled classes -> full details
+  const myClasses = enrolledClasses
+    .map((e) => allClasses.find((c) => c.id === e.classID))
+    .filter(
+      (c): c is Classes => c != undefined && c.days.includes(todayAsString),
+    ) as Classes[];
+
+  // filter missed logs
+  const missedLogs = attendanceLogs.filter((a) => a.status === "missed");
+
   return (
     <div className="space-y-6">
       {/* Top Grid: Next + Missed */}
@@ -23,12 +58,24 @@ export default function StudentDashboard() {
             <CardTitle className="text-lg">Next Class</CardTitle>
           </CardHeader>
           <CardContent>
-            {allInstructorClasses && allInstructorClasses.length > 0 ? (
-              [...allInstructorClasses]
+            {myClasses && myClasses.length > 0 ? (
+              [...myClasses]
                 .sort((a, b) => a.time.localeCompare(b.time))
                 .map((c, idx) => {
-                  const notesForClass = classesNotifications.filter(
-                    (n) => n.classId === c.id,
+                  const sortedNotifications = notifications
+                    ?.filter((n) => n.classID === c.id)
+                    .sort(
+                      (a, b) =>
+                        new Date(b.date + "T" + b.time).getTime() -
+                        new Date(a.date + "T" + a.time).getTime(),
+                    );
+
+                  const latestCancellation = sortedNotifications.filter(
+                    (n) => n.type === "cancellation" && n.date === todayISODate,
+                  )[0];
+
+                  const otherNotifications = sortedNotifications.filter(
+                    (n) => n.type !== "cancellation",
                   );
 
                   return (
@@ -44,25 +91,35 @@ export default function StudentDashboard() {
                           {c.title}
                         </span>{" "}
                         <span className="text-muted-foreground">
-                          {formatTime(c.time)}
+                          {formatTime24To12(c.time)}
                         </span>
                       </p>
-
                       <ul className="ml-4 space-y-1">
-                        {notesForClass.length > 0 ? (
-                          notesForClass.map((note) => (
+                        {latestCancellation ? (
+                          <li
+                            key={latestCancellation.id}
+                            className={`font-semibold text-red-600/60 italic ${
+                              idx === 0 ? "text-lg" : "text-sm"
+                            }`}
+                          >
+                            • {latestCancellation.message}
+                          </li>
+                        ) : null}
+
+                        {otherNotifications.length > 0 ? (
+                          otherNotifications.map((note) => (
                             <li
                               key={note.id}
                               className={`italic ${
                                 idx === 0
-                                  ? "text-lg text-black/80"
+                                  ? "text-lg text-black/60"
                                   : "text-muted-foreground text-sm"
                               }`}
                             >
                               • {note.message}
                             </li>
                           ))
-                        ) : (
+                        ) : latestCancellation ? (
                           <li
                             className={`italic ${
                               idx === 0
@@ -72,15 +129,15 @@ export default function StudentDashboard() {
                           >
                             • No changes
                           </li>
-                        )}
+                        ) : null}
                       </ul>
                     </div>
                   );
                 })
             ) : (
               <p className="text-muted-foreground text-sm">
-                You're not enrolled yet.{" "}
-                <Link to="/student/enroll" className="text-primary underline">
+                No classes found for this day.{" "}
+                <Link to="/classmanagement" className="text-primary underline">
                   Enroll now →
                 </Link>
               </p>
@@ -95,19 +152,17 @@ export default function StudentDashboard() {
             <CardTitle className="text-lg">Missed Classes</CardTitle>
           </CardHeader>
           <CardContent>
-            {allStudentAttendanceData.length > 0 ? (
+            {missedLogs.length > 0 ? (
               <ul className="space-y-2 text-sm">
-                {allStudentAttendanceData
-                  .filter((a) => a.status === "missed")
+                {missedLogs
                   .sort(
                     (a, b) =>
                       new Date(b.time).getTime() - new Date(a.time).getTime(),
                   )
                   .map((attendance, idx) => {
-                    const classInfo = allInstructorClasses.find(
-                      (c) => c.id === attendance.classId,
+                    const classInfo = allClasses.find(
+                      (c) => c.id === attendance.classID,
                     );
-
                     return (
                       <li
                         key={idx}

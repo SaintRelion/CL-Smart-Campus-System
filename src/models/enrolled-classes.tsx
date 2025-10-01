@@ -1,6 +1,5 @@
-export interface EnrolledClassesProps {
-  firebaseID?: string;
-  id: number;
-  userId: number;
-  classId: number;
+export interface EnrolledClasses {
+  id: string;
+  userID: string;
+  classID: string;
 }

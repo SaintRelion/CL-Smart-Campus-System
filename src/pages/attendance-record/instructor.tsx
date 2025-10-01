@@ -12,7 +12,7 @@ import {
   allStudentAttendanceData,
 } from "@/data/mock-student-data";
 import { Calendar } from "@/components/ui/calendar";
-import { formatDateToOnlyTime, formatTime } from "@/lib/mydate";
+import { formatDateToOnlyTime, formatTime24To12 } from "@/lib/mydate";
 import {
   Accordion,
   AccordionContent,
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/accordion";
 import { Check, X } from "lucide-react";
 import { useAuth } from "@saintrelion/auth-lib";
-import type { AttendanceLogsProps } from "@/models/attendance";
+import type { AttendanceLogs } from "@/models/attendance";
 
 const dayMap: Record<string, number> = {
   Sunday: 0,
@@ -133,7 +133,7 @@ const InstructorAttendanceRecordPage = () => {
                                   {icl.title} ({icl.code})
                                 </span>
                                 <span className="text-muted-foreground text-sm">
-                                  {formatTime(icl.time)} •{" "}
+                                  {formatTime24To12(icl.time)} •{" "}
                                   {enrolledStudents.length} students
                                 </span>
                               </div>
@@ -143,7 +143,7 @@ const InstructorAttendanceRecordPage = () => {
                                   {/* ✅ Mark Present */}
                                   <button
                                     onClick={() => {
-                                      const newRecord: AttendanceLogsProps = {
+                                      const newRecord: AttendanceLogs = {
                                         id: instructorAttendanceData.length + 1,
                                         userId: user.id, // instructor id
                                         userType: "instructor",
@@ -195,7 +195,7 @@ const InstructorAttendanceRecordPage = () => {
                                         prompt("Reason for no class?") ||
                                         "unspecified";
 
-                                      const newRecord: AttendanceLogsProps = {
+                                      const newRecord: AttendanceLogs = {
                                         id: instructorAttendanceData.length + 1,
                                         userId: user.id, // instructor id
                                         userType: "instructor",
