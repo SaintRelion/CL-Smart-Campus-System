@@ -6,4 +6,4 @@ import {
 
 setAuthLibClientAppName("smartcampus");
 setDataAccessLayerClientAppName("smartcampus");
-setGlobalMode("firebase");
+setGlobalMode("mock");

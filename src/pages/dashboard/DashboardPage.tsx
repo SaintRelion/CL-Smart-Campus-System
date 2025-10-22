@@ -1,18 +1,16 @@
 import type { JSX } from "react";
-import StudentDashboard from "./student";
 import InstructorDashboardPage from "./instructor";
 import { useAuth } from "@saintrelion/auth-lib";
-import type { UserRole } from "@/models/userrole";
+import AdminDashboardPage from "./admin";
 
 const DashboardPage = () => {
   const { user } = useAuth();
 
   const dashboardPages: Record<string, JSX.Element> = {
-    admin: <StudentDashboard />,
+    admin: <AdminDashboardPage />,
     instructor: <InstructorDashboardPage />,
-    student: <StudentDashboard />,
   };
 
-  return <div className="p-6">{dashboardPages[user.role as UserRole]}</div>;
+  return <div className="p-6">{dashboardPages[user.role ?? ""]}</div>;
 };
 export default DashboardPage;

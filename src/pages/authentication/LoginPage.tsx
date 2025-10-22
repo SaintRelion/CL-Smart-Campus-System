@@ -1,76 +1,57 @@
-import { useState } from "react";
+import { firebaseLoginWithOtherInfo, useAuth } from "@saintrelion/auth-lib";
+import { useNavigate } from "react-router-dom";
+import { buildFieldsFromModel } from "../to-be-library/forms/lib/helper";
+import RenderForm from "../to-be-library/forms/render-form";
+import { RenderFormFields } from "../to-be-library/forms/render-form-fields";
+import { RenderFormButton } from "../to-be-library/forms/render-form-button";
+import { RenderCard } from "@saintrelion/ui";
 
-import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-
-import { firebaseLoginWithEmail, useAuth } from "@saintrelion/auth-lib";
-import { Link, useNavigate } from "react-router-dom";
+const authenticateFields = buildFieldsFromModel({
+  employeeID: { type: "text", label: "ID" },
+});
 
 const LoginPage = () => {
   const { setUser } = useAuth();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleLogin = async () => {
+  const handleLogin = async (data: Record<string, string>) => {
     // Normally you'd call API here, then save returned user
+    console.log("Raw submission:", data);
 
-    await firebaseLoginWithEmail(email, password, setUser, (loggedInUser) => {
-      if (loggedInUser.role == "superadmin")
-        navigate("/departmentadvisers"); // redirect to dashboard
-      else navigate("/");
+    await firebaseLoginWithOtherInfo(
+      "employeeID",
+      data.employeeID,
+      data.employeeID,
+      setUser,
+      (loggedInUser) => {
+        navigate("/");
 
-      console.log(loggedInUser);
-      console.log(loggedInUser.createdAt.toDate());
-    });
-
-    // await firebaseLoginWithGoogle(setUser, (loggedInUser) => {
-    //   if (loggedInUser.role == "superadmin")
-    //     navigate("/departmentadvisers"); // redirect to dashboard
-    //   else navigate("/");
-    //   console.log(loggedInUser);
-    // });
+        console.log(loggedInUser.createdAt);
+      },
+    );
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-100">
-      <Card className="w-full max-w-sm rounded-xl border border-gray-200 bg-white shadow-md">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl font-bold">
-            Login
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <Input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          <Input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
+    <div className="flex h-screen w-full items-center justify-center bg-blue-100">
+      <RenderCard
+        headerTitle="Login"
+        headerClass="text-center text-2xl font-bold"
+        wrapperClass=" w-full max-w-md "
+        flat={true}
+      >
+        <RenderForm wrapperClass="space-y-5 flex flex-col items-center">
+          <RenderFormFields
+            fields={authenticateFields}
+            wrapperClass="flex flex-col gap-1"
           />
 
-          <Button className="w-full" onClick={handleLogin}>
-            Login
-          </Button>
-
-          <p className="text-center text-sm text-gray-600">
-            Don’t have an account?{" "}
-            <Link
-              to="/register"
-              className="font-semibold text-blue-600 hover:underline"
-            >
-              Register
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
+          <RenderFormButton
+            buttonLabel="Login"
+            buttonClass="bg-blue-400 hover:bg-blue-500"
+            onSubmit={handleLogin}
+          />
+        </RenderForm>
+      </RenderCard>
     </div>
   );
 };
