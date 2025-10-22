@@ -1,13 +1,13 @@
 import { useAuth } from "@saintrelion/auth-lib";
 import { Link } from "react-router-dom";
-import UserMenu from "./UserMenu";
+// import UserMenu from "./UserMenu";
 import { renderNavItems } from "@saintrelion/routers";
 
 const Navbar = () => {
   const { user } = useAuth();
 
   return (
-    <nav className="flex items-center justify-between border-b border-gray-200 bg-white px-6 py-3 shadow-sm">
+    <nav className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-3 shadow-sm">
       <Link to="/" className="text-primary text-xl font-semibold">
         ClassTrack
       </Link>
@@ -15,10 +15,19 @@ const Navbar = () => {
         {renderNavItems({
           role: user.role ?? "",
           baseClass:
-            "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all text-muted-foreground hover:bg-muted hover:text-primary",
-          activeClass: "bg-black text-white pointer-events-none",
+            "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all text-muted-foreground hover:bg-blue-100 hover:text-primary",
+          activeClass: "bg-blue-600 text-white pointer-events-none",
         })}
-        <UserMenu />
+        {/* <UserMenu /> */}
+        <button
+          onClick={() => {
+            console.log("Logging out...");
+            window.location.href = "/login";
+          }}
+          className="cursor-pointer items-center gap-2 bg-red-300 px-4 py-2 text-left text-sm hover:bg-red-400"
+        >
+          Logout
+        </button>
       </div>
     </nav>
   );
