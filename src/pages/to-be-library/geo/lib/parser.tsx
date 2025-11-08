@@ -1,4 +1,4 @@
-import type { Coords } from "../models/geo-models";
+import type { Coords } from "../models/use-geo-model";
 
 export function encodePath(path: Coords[] | undefined): string {
   if (!Array.isArray(path) || path.length === 0) return "[]";

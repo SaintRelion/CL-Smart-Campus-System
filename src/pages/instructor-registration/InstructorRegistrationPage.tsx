@@ -72,10 +72,8 @@ const InstructorRegistrationPage = () => {
         {/* Add Instructor Button (opens form dialog) */}
         <RenderDialog
           triggerLabel="Register Instructor"
-          triggerClass="bg-blue-600 text-white"
           headerTitle="Create Account"
           description="Fill out the form to register an instructor."
-          contentClass="max-w-md"
         >
           <RenderForm wrapperClass="space-y-6">
             <RenderFormFields fields={personalInfoFields} />
@@ -88,7 +86,7 @@ const InstructorRegistrationPage = () => {
       </div>
 
       {/* Table occupies full remaining space */}
-      <RenderCard wrapperClass="flex-1 shadow-md border" contentClass="p-4">
+      <RenderCard>
         <RenderTable
           data={instructorRows}
           columns={columns}

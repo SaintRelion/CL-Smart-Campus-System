@@ -33,12 +33,7 @@ const LoginPage = () => {
 
   return (
     <div className="flex h-screen w-full items-center justify-center bg-blue-100">
-      <RenderCard
-        headerTitle="Login"
-        headerClass="text-center text-2xl font-bold"
-        wrapperClass=" w-full max-w-md "
-        flat={true}
-      >
+      <RenderCard headerTitle="Login">
         <RenderForm wrapperClass="space-y-5 flex flex-col items-center">
           <RenderFormFields
             fields={authenticateFields}

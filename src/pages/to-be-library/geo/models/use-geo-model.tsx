@@ -1,11 +1,31 @@
-import type { Coords } from "./geo-models";
+export type Coords = { lat: number; lng: number };
 
-export interface UseGeoOptions {
-  mode?: "single" | "track";
-  autoStopAfterMs?: number; // if track mode, auto-stop after this time
+export interface GeoServiceProps {
   highAccuracy?: boolean;
-  minDistance?: number; // ignore jitter below X meters
-  externalCoords?: Coords | null;
+  autoStopAfterMs?: number;
+  minDistance?: number;
+  mode?: "single" | "tracking";
+  externalCoords?: Coords;
   externalPath?: Coords[];
+}
+
+export interface GeoServiceStates {
+  coords: Coords | null;
+  path: Coords[];
+  distance: number;
+  isRunning: boolean;
+}
+
+export interface GeoServiceBehaviors {
+  start: () => void;
+  stop: () => void;
+  reset: () => void;
+}
+
+export interface GeoServiceCallbacks {
+  onStart?: () => void;
   onStop?: () => void;
+  onCoords?: (coords: Coords) => void;
+  onError?: (message: string) => void;
+  onPath?: (path: Coords[]) => void;
 }
