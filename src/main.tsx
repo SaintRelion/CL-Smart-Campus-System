@@ -8,8 +8,9 @@ import { AuthProvider } from "@saintrelion/auth-lib";
 import { router } from "./navigations";
 
 import "@/lib/firebase-client";
+import "@/themes";
 
-import "@/data-access-config";
+import "@/dalconfig";
 import "@/repositories/attendance";
 import "@/repositories/classes";
 import "@/repositories/user";

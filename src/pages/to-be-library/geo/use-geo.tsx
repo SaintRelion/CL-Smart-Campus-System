@@ -1,151 +1,163 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { getDistance } from "geolib";
-import type { Coords } from "./models/geo-models";
-import type { UseGeoOptions } from "./models/use-geo-model";
+import type {
+  GeoServiceCallbacks,
+  GeoServiceProps,
+  GeoServiceStates,
+  GeoServiceBehaviors,
+} from "./models/use-geo-model";
+import type { Coords } from "./models/use-geo-model";
 
-export function useGeo(options: UseGeoOptions = {}) {
+export function useGeoService(
+  parameters: GeoServiceProps = {},
+  callbacks: GeoServiceCallbacks = {},
+) {
   const {
     mode = "single",
-    autoStopAfterMs,
     highAccuracy = true,
     minDistance = 1,
+    autoStopAfterMs,
     externalCoords,
     externalPath,
-    onStop,
-  } = options;
+  } = parameters;
 
+  const { onStart, onStop, onError, onCoords, onPath } = callbacks;
+
+  // STATES
   const [coords, setCoords] = useState<Coords | null>(null);
   const [path, setPath] = useState<Coords[]>([]);
-  const [travelledDistance, setTravelledDistance] = useState<number>(() => {
-    if (externalPath && externalPath.length > 1) {
-      return externalPath.reduce((acc, point, i) => {
-        if (i === 0) return 0;
-        return acc + getDistance(externalPath[i - 1], point);
-      }, 0);
-    }
-    return 0;
-  });
-  const [isTracking, setIsTracking] = useState(false);
+  const [distance, setDistance] = useState(0);
+  const [isRunning, setIsRunning] = useState(false);
+
   const watchRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    if (externalPath && externalPath.length > 1) {
-      const d = externalPath.reduce((acc, point, i) => {
-        if (i === 0) return 0;
-        return acc + getDistance(externalPath[i - 1], point);
-      }, 0);
-      setTravelledDistance(d);
-      setPath(externalPath);
-    }
-  }, [externalPath]);
-
+  // Update state if external values change
   useEffect(() => {
     if (externalCoords) setCoords(externalCoords);
   }, [externalCoords]);
 
-  const stopTracking = useCallback(() => {
+  useEffect(() => {
+    if (externalPath) {
+      setPath(externalPath);
+      // Recalculate distance
+      let d = 0;
+      for (let i = 1; i < externalPath.length; i++) {
+        d += getDistance(externalPath[i - 1], externalPath[i]);
+      }
+      setDistance(d);
+    }
+  }, [externalPath]);
+
+  // BEHAVIORS
+  const stop = useCallback(() => {
     if (watchRef.current !== null) {
       navigator.geolocation.clearWatch(watchRef.current);
       watchRef.current = null;
-      setIsTracking(false);
+      setIsRunning(false);
       onStop?.();
     }
   }, [onStop]);
 
-  const getLocation = useCallback(() => {
+  const reset = useCallback(() => {
+    setCoords(null);
+    setPath([]);
+    setDistance(0);
+    stop();
+  }, [stop]);
+
+  const start = useCallback(() => {
     if (!("geolocation" in navigator)) {
-      throw new Error("Geolocation not supported");
-    }
-
-    // In view mode, don’t do anything
-    if (externalCoords || externalPath) {
-      console.log(
-        "Used for calculation only, manuatgrf9-[p8illy using geolocation on client",
-      );
-
+      const err = new Error("Geolocation not supported");
+      onError?.(err.message);
       return;
     }
 
-    // Single snapshot mode
+    if (isRunning) return;
+
+    setIsRunning(true);
+    onStart?.();
+
     if (mode === "single") {
-      console.log("Geo Location Captured");
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
           setCoords(p);
+          onCoords?.(p);
         },
-        console.error,
+        (err) => {
+          onError?.(err.message);
+        },
         { enableHighAccuracy: highAccuracy },
       );
+      setIsRunning(false);
       return;
     }
 
-    // Continuous tracking
-    if (isTracking) return;
-    setIsTracking(true);
-
-    console.log("Geo Tracker Started");
     const id = navigator.geolocation.watchPosition(
       (pos) => {
         const newPoint = {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
         };
+
         setCoords(newPoint);
+        onCoords?.(newPoint);
+
         setPath((prev) => {
-          // If no previous points yet
-          if (prev.length === 0) return [newPoint];
+          if (prev.length === 0) {
+            onPath?.([newPoint]);
+            return [newPoint];
+          }
 
           const last = prev[prev.length - 1];
           const d = getDistance(last, newPoint);
 
-          // Only add if distance is significant
           if (d > minDistance) {
-            setTravelledDistance((x) => x + d);
-            return [...prev, newPoint];
+            const newPath = [...prev, newPoint];
+            setDistance((x) => x + d);
+            onPath?.(newPath);
+            return newPath;
           }
 
-          // Otherwise, keep existing path
           return prev;
         });
       },
-      console.error,
-      { enableHighAccuracy: true, maximumAge: 1000 },
+      (err) => {
+        onError?.(err.message);
+      },
+      { enableHighAccuracy: highAccuracy, maximumAge: 1000 },
     );
 
     watchRef.current = id;
+
     if (autoStopAfterMs) {
-      setTimeout(() => stopTracking(), autoStopAfterMs);
+      setTimeout(stop, autoStopAfterMs);
     }
   }, [
+    isRunning,
     mode,
-    externalCoords,
-    externalPath,
     highAccuracy,
     minDistance,
     autoStopAfterMs,
-    stopTracking,
-    isTracking,
+    onStart,
+    onError,
+    onCoords,
+    onPath,
+    stop,
   ]);
 
-  const reset = useCallback(() => {
-    setCoords(null);
-    setPath([]);
-    setTravelledDistance(0);
-    stopTracking();
-  }, [stopTracking]);
-
-  useEffect(() => {
-    return stopTracking;
-  }, [stopTracking]);
-
-  return {
+  const serviceStates: GeoServiceStates = {
     coords,
     path,
-    travelledDistance,
-    isTracking,
-    getLocation,
-    stopTracking,
+    distance,
+    isRunning,
+  };
+
+  const serviceBehaviors: GeoServiceBehaviors = {
+    start,
+    stop,
     reset,
   };
+
+  return { serviceStates, serviceBehaviors };
 }

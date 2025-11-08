@@ -75,18 +75,13 @@ const InstructorClassManagement = () => {
     <div className="space-y-8 p-6">
       {/* Header + Add Class */}
       <RenderCard
-        flat={true}
-        wrapperClass="flex items-center justify-between px-0"
         headerTitle="Class Management"
-        headerClass="text-2xl font-bold"
-        // flat={true}
+        ui={{ wrapperClass: "flex justify-between items-center" }}
       >
         <RenderDialog
           triggerLabel="Add New Class"
-          triggerClass="bg-blue-600 text-white"
           headerTitle="Create New Class"
           description="Fill in the details to create your class."
-          contentClass="max-w-md"
         >
           <RenderForm wrapperClass="space-y-5">
             <RenderFormFields fields={classFields} />
@@ -99,56 +94,46 @@ const InstructorClassManagement = () => {
       </RenderCard>
 
       {/* CLASS LIST */}
-      <RenderDataCore
-        data={classes}
-        headerCustomUI={{
-          title: "My Classes",
-          titleClass: "text-xl font-semibold",
-        }}
-        contentCustomUI={{
-          wrapperClass: "flex flex-col space-y-5",
-          itemClass: "rounded-lg border p-4 shadow-sm hover:bg-gray-50 ",
-        }}
-        renderItem={(item) => (
-          <>
-            <button
-              className="text-left font-medium text-blue-600 hover:underline"
-              onClick={() => setSelectedClass(item)}
-            >
-              {item.title}
-            </button>
-
-            <p className="text-sm text-gray-600">
-              {formatReadableTime(item.time)} • {item.room || "No Room"}
-            </p>
-            <p className="text-xs text-gray-500">
-              Days: {item.days.join(", ")}
-            </p>
-
-            <div className="mt-3">
-              <RenderDialog
-                triggerLabel="Add Student"
-                triggerClass="bg-gray-100 text-gray-700 hover:bg-gray-200"
-                headerTitle={`Add Student to ${item.title}`}
-                contentClass="max-w-sm"
+      <RenderCard headerTitle="My Classes">
+        <RenderDataCore
+          data={classes}
+          renderItem={(item) => (
+            <>
+              <button
+                className="text-left font-medium text-blue-600 hover:underline"
+                onClick={() => setSelectedClass(item)}
               >
-                <div className="space-y-3">
-                  <RenderForm>
-                    <RenderFormFields
-                      wrapperClass="w-full mb-4"
-                      fields={addStudentFields}
-                    />
-                    <RenderFormButton
-                      buttonLabel="Add Student"
-                      onSubmit={(data) => handleAddStudent(data, item)}
-                    />
-                  </RenderForm>
-                </div>
-              </RenderDialog>
-            </div>
-          </>
-        )}
-      />
+                {item.title}
+              </button>
+              <p className="text-sm text-gray-600">
+                {formatReadableTime(item.time)} • {item.room || "No Room"}
+              </p>
+              <p className="text-xs text-gray-500">
+                Days: {item.days.join(", ")}
+              </p>
+              <div className="mt-3">
+                <RenderDialog
+                  triggerLabel="Add Student"
+                  headerTitle={`Add Student to ${item.title}`}
+                >
+                  <div className="space-y-3">
+                    <RenderForm>
+                      <RenderFormFields
+                        wrapperClass="w-full mb-4"
+                        fields={addStudentFields}
+                      />
+                      <RenderFormButton
+                        buttonLabel="Add Student"
+                        onSubmit={(data) => handleAddStudent(data, item)}
+                      />
+                    </RenderForm>
+                  </div>
+                </RenderDialog>
+              </div>
+            </>
+          )}
+        />
+      </RenderCard>
 
       {/* STUDENT LIST DIALOG */}
       {selectedClass && (
@@ -157,13 +142,9 @@ const InstructorClassManagement = () => {
           onOpenChange={(open) => !open && setSelectedClass(null)}
           headerTitle={selectedClass.title}
           description={`Students enrolled in this class.`}
-          contentClass="max-w-md"
         >
           <RenderDataCore
             data={selectedClass.students}
-            contentCustomUI={{
-              itemClass: "text-sm text-gray-700",
-            }}
             renderItem={(item) => (
               <>
                 <p>{item}</p>

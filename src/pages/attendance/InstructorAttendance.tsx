@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { GeoViewer } from "../to-be-library/geo/geo-viewer";
 import { useDBOperations } from "@saintrelion/data-access-layer";
 import type { AttendanceLog } from "@/models/attendance";
@@ -11,14 +11,17 @@ import {
 } from "@saintrelion/time-functions";
 
 import { appendPath, encodePath } from "../to-be-library/geo/lib/parser";
+import type { GeoServiceStates } from "../to-be-library/geo/models/use-geo-model";
+// import { CameraViewer } from "../to-be-library/camera/camera-viewer";
 
 export default function InstructorAttendance() {
   const { user } = useAuth();
 
+  // const [captureRef, setCaptureRef] = useState<string | null>("");
+  const geoRef = useRef<Partial<GeoServiceStates>>({});
+
   const [isCheckedIn, setIsCheckedIn] = useState(false);
-  const [path, setPath] = useState<{ lat: number; lng: number }[]>([
-    { lat: 6.9271552, lng: 122.0706304 },
-  ]);
+  const path = useRef<{ lat: number; lng: number }[]>([]);
   const [pathMovement, setPathMovement] = useState<number[][]>([]);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -100,27 +103,20 @@ export default function InstructorAttendance() {
       const now = new Date().toISOString();
       setIsCheckedIn(true);
 
-      // Capture first position immediately
-      if (path.length > 0) {
-        const last = path[path.length - 1];
-        setPathMovement([[last.lat, last.lng]]);
-      }
-
       // if no record for today, create one
       if (!logId) {
         attendanceInsert.mutate({
           employeeID: user.employeeID,
           timeIn: now,
-          pathMovement: encodePath([path[0]]),
+          pathMovement: encodePath([path.current[0]]),
         });
       }
 
       // Start periodic path capture every 5 minutes
       intervalRef.current = setInterval(
         () => {
-          if (path.length > 0) {
-            const last = path[path.length - 1];
-            setPathMovement((prev) => [...prev, [last.lat, last.lng]]);
+          if (path.current.length > 0) {
+            const last = path.current[path.current.length - 1];
 
             attendanceUpdate.mutate({
               field: "id",
@@ -146,9 +142,8 @@ export default function InstructorAttendance() {
       }
 
       // Save final position
-      if (path.length > 0) {
-        const last = path[path.length - 1];
-        setPathMovement((prev) => [...prev, [last.lat, last.lng]]);
+      if (path.current.length > 0) {
+        const last = path.current[path.current.length - 1];
 
         attendanceUpdate.mutate({
           field: "id",
@@ -179,11 +174,25 @@ export default function InstructorAttendance() {
       </div>
 
       <GeoViewer
-        wrapperClass="h-[400px] w-full"
-        showControls={false}
-        showMap={false}
-        geoOptions={{ mode: "single" }}
-        // onCoordinateChange={(_, pathData) => setPath(pathData)}
+        serviceParameters={{
+          mode: "tracking",
+          highAccuracy: true,
+          minDistance: 3,
+          autoStopAfterMs: 5000,
+        }}
+        serviceCallbacks={{
+          onCoords: (c) => (geoRef.current.coords = c),
+          onPath: (p) => (geoRef.current.path = p),
+          onStart: () => console.log("Started tracking"),
+          onStop: () => console.log("Stopped"),
+          onError: (err) => console.log("Error: ", err),
+        }}
+        uiParameters={{
+          autoStart: true,
+          showDefaultControls: true,
+          showDefaultData: true,
+          showMap: true,
+        }}
       />
 
       <div className="rounded border bg-gray-50 p-4">
@@ -203,6 +212,18 @@ export default function InstructorAttendance() {
           <strong>Path Points Recorded:</strong> {pathMovement.length}
         </p>
       </div>
+
+      {/* <CameraViewer
+        serviceParameters={{ video: false, facingMode: "user" }}
+        serviceCallbacks={{
+          onCapture: (_, url) => {
+            setCaptureRef(url);
+            // captureRef.current = url;
+          },
+        }}
+        uiParameters={{ showPreview: false }}
+      />
+      <img src={captureRef ?? undefined} alt="you" /> */}
     </div>
   );
 }

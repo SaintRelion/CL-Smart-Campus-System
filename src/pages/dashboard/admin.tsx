@@ -153,7 +153,7 @@ export default function AdminAttendancePage() {
           }`}
         >
           <div className="h-[450px] w-full">
-            <GeoViewer
+            {/* <GeoViewer
               wrapperClass="h-full w-full"
               showControls={false}
               showMap={true}
@@ -166,7 +166,7 @@ export default function AdminAttendancePage() {
                   lng,
                 })),
               }}
-            />
+            /> */}
           </div>
         </RenderDialog>
       )}

@@ -1,158 +1,136 @@
-// import {
-//   MapContainer,
-//   TileLayer,
-//   Marker,
-//   Polyline,
-//   useMap,
-// } from "react-leaflet";
-// import L from "leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Polyline,
+  useMap,
+} from "react-leaflet";
+import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect } from "react";
-import type { Coords } from "./models/geo-models";
-import { useGeo } from "./use-geo";
-import type { UseGeoOptions } from "./models/use-geo-model";
-import { MapPin } from "lucide-react";
+
+import { useGeoService } from "./use-geo";
+import type { GeoViewerProps } from "./models/geo-viewer-model";
+import type { Coords } from "./models/use-geo-model";
+
+function Recenter({ coords }: { coords: Coords }) {
+  const map = useMap();
+  useEffect(() => {
+    if (coords) map.setView([coords.lat, coords.lng], map.getZoom());
+  }, [coords, map]);
+  return null;
+}
 
 export function GeoViewer({
-  wrapperClass = "h-full w-full rounded",
-  // showMap = true,
-  showControls = true,
-  enableLogs = false,
-  onCoordinateChange,
-  geoOptions,
-}: {
-  wrapperClass?: string;
-  showMap?: boolean;
-  showControls?: boolean;
-  enableLogs?: boolean;
-  onCoordinateChange: (coords: Coords, path: Coords[]) => void;
-  geoOptions?: UseGeoOptions;
-}) {
+  serviceParameters,
+  serviceCallbacks,
+  uiParameters,
+  renderUI,
+}: GeoViewerProps) {
+  const { serviceStates, serviceBehaviors } = useGeoService(
+    serviceParameters,
+    serviceCallbacks,
+  );
+
+  const ctx = {
+    ...serviceStates,
+    ...serviceBehaviors,
+  };
+
   const {
-    coords,
-    path,
-    travelledDistance,
-    isTracking,
-    getLocation,
-    stopTracking,
-    reset,
-  } = useGeo(geoOptions);
+    autoStart = false,
+    showDefaultData = true,
+    showDefaultControls = true,
+    showMap = true,
+    showMarker = true,
+    mapHeight = "16rem",
+    wrapperClass = "",
+  } = uiParameters ?? {};
 
+  // autoStart when first mounted
   useEffect(() => {
-    getLocation();
-  }, [getLocation]);
+    console.log("Auto");
+    if (autoStart) serviceBehaviors.start();
+    // return serviceBehaviors.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  if (onCoordinateChange)
-    onCoordinateChange(coords ?? { lat: 0, lng: 0 }, path);
-
-  // const myIcon = L.icon({
-  //   iconUrl: "/my-marker.png",
-  //   iconSize: [48, 41],
-  //   iconAnchor: [24, 38],
-  // });
-
-  // function Recenter({ coords }: { coords: Coords }) {
-  //   const map = useMap();
-  //   useEffect(() => {
-  //     if (coords) map.setView([coords.lat, coords.lng], map.getZoom());
-  //   }, [coords, map]);
-  //   return null;
-  // }
-
-  if (enableLogs) {
-    console.log("-------");
-    console.log("Coords: ", coords);
-    console.log("Path: ", path);
-    console.log("-------");
-  }
+  const markerIcon = L.icon({
+    iconUrl: "/my-marker.png",
+    iconSize: [40, 35],
+    iconAnchor: [20, 32],
+  });
 
   return (
     <div
-      className={`relative flex flex-col items-center space-y-4 p-4 ${wrapperClass}`}
+      className={`relative flex flex-col items-center gap-4 rounded bg-white p-4 shadow ${wrapperClass}`}
     >
-      {/* {showMap && (
+      {/* Map Section */}
+      {showMap && (
         <MapContainer
-          center={coords || { lat: 0, lng: 0 }}
+          center={ctx.coords || { lat: 0, lng: 0 }}
           zoom={16}
           scrollWheelZoom
-          className="h-64 w-full rounded"
+          style={{ height: mapHeight, width: "100%" }}
+          className="rounded"
         >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          {coords && <Marker position={coords} icon={myIcon} />}
-          {path?.length > 1 ? (
-            <Polyline positions={path} color="blue" />
-          ) : (
-            path?.length == 1 && (
-              <Polyline positions={[path[0], path[0]]} color="blue" />
-            )
+          {showMarker && ctx.coords && (
+            <Marker position={ctx.coords} icon={markerIcon} />
           )}
-          {coords && <Recenter coords={coords} />}
+          {ctx.path.length > 1 && (
+            <Polyline positions={ctx.path} color="blue" />
+          )}
+          {ctx.coords && <Recenter coords={ctx.coords} />}
         </MapContainer>
-      )} */}
+      )}
 
-      <div className="bg-opacity-90 w-full rounded bg-white p-4 shadow-md">
-        {coords ? (
-          <p className="flex items-center gap-2">
-            <MapPin className="text-muted-foreground h-4 w-4" />
-            <span>
-              {/* Lat: {coords.lat}, Lng: {coords.lng} */}
-              Lat: 6.9271552, Lng: 122.0706304
-            </span>
-          </p>
-        ) : (
-          <p>No GPS data yet</p>
-        )}
-        {path.length > 0 && (
-          <p>Total Distance: {(travelledDistance / 1000).toFixed(3)} km</p>
-        )}
-        {showControls && (
-          <div className="mt-2 flex space-x-2">
-            <button
-              onClick={getLocation}
-              disabled={isTracking}
-              className="rounded bg-green-600 px-3 py-1 text-white"
-            >
-              Start
-            </button>
-            <button
-              onClick={stopTracking}
-              disabled={!isTracking}
-              className="rounded bg-red-600 px-3 py-1 text-white"
-            >
-              Stop
-            </button>
-            <button
-              onClick={reset}
-              className="rounded bg-gray-600 px-3 py-1 text-white"
-            >
-              Reset
-            </button>
-          </div>
-        )}
-      </div>
-
-      {enableLogs && (
-        <div className="w-full rounded bg-gray-100 p-2 font-mono text-xs whitespace-pre-wrap">
-          {path.length > 0 ? (
-            <div>
-              <p className="mb-1 font-semibold">📍 Path Logs:</p>
-              {path.map((p, i) => (
-                <p key={i}>
-                  {i + 1}. Lat: {p.lat}, Lng: {p.lng}
-                </p>
-              ))}
+      {renderUI ? (
+        renderUI(ctx)
+      ) : (
+        <>
+          {showDefaultData && (
+            <div className="w-full text-sm text-gray-600">
+              {ctx.coords ? (
+                <>
+                  <p>
+                    Lat: {ctx.coords.lat.toFixed(6)}, Lng:{" "}
+                    {ctx.coords.lng.toFixed(6)}
+                  </p>
+                  {ctx.path.length > 0 && (
+                    <p>Distance: {(ctx.distance / 1000).toFixed(3)} km</p>
+                  )}
+                </>
+              ) : (
+                <p>No coordinates yet</p>
+              )}
             </div>
-          ) : coords ? (
-            <div>
-              <p className="mb-1 font-semibold">📍 Current Location:</p>
-              <p>
-                Lat: {coords.lat}, Lng: {coords.lng}
-              </p>
-            </div>
-          ) : (
-            <p>No GPS data yet</p>
           )}
-        </div>
+          {showDefaultControls && (
+            <div className="flex gap-2">
+              <button
+                onClick={ctx.start}
+                disabled={ctx.isRunning}
+                className="rounded bg-green-600 px-3 py-1 text-white"
+              >
+                Start
+              </button>
+              <button
+                onClick={ctx.stop}
+                disabled={!ctx.isRunning}
+                className="rounded bg-red-600 px-3 py-1 text-white"
+              >
+                Stop
+              </button>
+              <button
+                onClick={ctx.reset}
+                className="rounded bg-gray-600 px-3 py-1 text-white"
+              >
+                Reset
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
