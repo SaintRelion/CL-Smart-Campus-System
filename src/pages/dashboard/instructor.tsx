@@ -3,9 +3,12 @@ import { useAuth } from "@saintrelion/auth-lib";
 import { useDBOperations } from "@saintrelion/data-access-layer";
 import { useEffect, useState } from "react";
 import InstructorAttendance from "../attendance/InstructorAttendance";
-import { formatReadableTime } from "@saintrelion/time-functions";
-
-import { RenderCard } from "@saintrelion/ui";
+import {
+  formatReadableTime,
+  getCurrentDateTimeString,
+  getCurrentWeekday,
+  toDate,
+} from "@saintrelion/time-functions";
 
 const InstructorDashboardPage = () => {
   const { user } = useAuth();
@@ -24,8 +27,10 @@ const InstructorDashboardPage = () => {
   useEffect(() => {
     if (!instructorClasses.length) return;
 
-    const now = new Date();
-    const today = now.toLocaleDateString("en-US", { weekday: "long" });
+    // const now = new Date();
+    // const today = now.toLocaleDateString("en-US", { weekday: "long" });
+    const todayDateTime = toDate(getCurrentDateTimeString());
+    const today = getCurrentWeekday();
 
     const todays = instructorClasses
       .filter((cls) => cls.days.includes(today))
@@ -39,11 +44,14 @@ const InstructorDashboardPage = () => {
       const classTime = new Date();
       classTime.setHours(hour, minute, 0, 0);
 
-      const diffMinutes = (classTime.getTime() - now.getTime()) / (1000 * 60);
-      if (diffMinutes > 0 && diffMinutes <= 15) {
-        setAlert(
-          `Your ${formatReadableTime(cls.time)} class "${cls.title}" starts in ${Math.round(diffMinutes)} minutes`,
-        );
+      if (todayDateTime != undefined) {
+        const diffMinutes =
+          (classTime.getTime() - todayDateTime.getTime()) / (1000 * 60);
+        if (diffMinutes > 0 && diffMinutes <= 15) {
+          setAlert(
+            `Your ${formatReadableTime(cls.time)} class "${cls.title}" starts in ${Math.round(diffMinutes)} minutes`,
+          );
+        }
       }
     });
   }, [instructorClasses]);
@@ -52,14 +60,16 @@ const InstructorDashboardPage = () => {
     <div className="flex flex-col gap-6 p-6 md:flex-row">
       {/* LEFT COLUMN – Map + Attendance */}
       <div className="space-y-4 md:w-1/2">
-        <RenderCard headerTitle="Attendance Tracker">
+        <div>
+          <h1>Attendance Tracker</h1>
           <InstructorAttendance />
-        </RenderCard>
+        </div>
       </div>
 
       {/* RIGHT: Classes and Alerts */}
       <div className="space-y-6 md:w-1/2">
-        <RenderCard headerTitle="Instructor Dashboard">
+        <div>
+          <h1>Instructor Dashboard</h1>
           {alert && (
             <div className="mb-4 rounded-md border-l-4 border-yellow-500 bg-yellow-100 p-4 text-yellow-700 shadow">
               <p>{alert}</p>
@@ -87,7 +97,7 @@ const InstructorDashboardPage = () => {
               ))}
             </ul>
           )}
-        </RenderCard>
+        </div>
       </div>
     </div>
   );

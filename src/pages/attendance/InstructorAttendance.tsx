@@ -1,28 +1,29 @@
 import { useState, useRef } from "react";
-import { GeoViewer } from "../to-be-library/geo/geo-viewer";
 import { useDBOperations } from "@saintrelion/data-access-layer";
 import type { AttendanceLog } from "@/models/attendance";
 import { useAuth } from "@saintrelion/auth-lib";
 
 import {
   formatReadableDateTime,
-  getCurrentDateTime,
+  getCurrentDateTimeString,
   isSameDay,
 } from "@saintrelion/time-functions";
 
 import { appendPath, encodePath } from "../to-be-library/geo/lib/parser";
-import type { GeoServiceStates } from "../to-be-library/geo/models/use-geo-model";
-// import { CameraViewer } from "../to-be-library/camera/camera-viewer";
+import { GeoViewer } from "../to-be-library/geo/geo-viewer";
+import { CameraViewer } from "../to-be-library/camera/camera-viewer";
+import type { Coords } from "../to-be-library/geo/models/use-geo-model";
 
 export default function InstructorAttendance() {
   const { user } = useAuth();
 
-  // const [captureRef, setCaptureRef] = useState<string | null>("");
-  const geoRef = useRef<Partial<GeoServiceStates>>({});
+  const [captureRef, setCaptureRef] = useState<string | null>("");
 
   const [isCheckedIn, setIsCheckedIn] = useState(false);
-  const path = useRef<{ lat: number; lng: number }[]>([]);
-  const [pathMovement, setPathMovement] = useState<number[][]>([]);
+
+  const [currentCoords, setCurrentCoords] = useState<Coords>();
+  console.log(currentCoords);
+  const [pathMovement, setPathMovement] = useState<Coords[]>([]);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -42,9 +43,8 @@ export default function InstructorAttendance() {
   });
 
   const todayAttendance = attendanceLogs.find((log) => {
-    const created = log.createdAt;
-    const today = getCurrentDateTime();
-    if (isSameDay(created, today)) return log;
+    const today = getCurrentDateTimeString();
+    if (isSameDay(log.createdAt, today)) return log;
   });
 
   // useEffect(() => {
@@ -108,15 +108,15 @@ export default function InstructorAttendance() {
         attendanceInsert.mutate({
           employeeID: user.employeeID,
           timeIn: now,
-          pathMovement: encodePath([path.current[0]]),
+          pathMovement: encodePath(pathMovement),
         });
       }
 
       // Start periodic path capture every 5 minutes
       intervalRef.current = setInterval(
         () => {
-          if (path.current.length > 0) {
-            const last = path.current[path.current.length - 1];
+          if (pathMovement.length > 0) {
+            const last = pathMovement[pathMovement.length - 1];
 
             attendanceUpdate.mutate({
               field: "id",
@@ -142,8 +142,8 @@ export default function InstructorAttendance() {
       }
 
       // Save final position
-      if (path.current.length > 0) {
-        const last = path.current[path.current.length - 1];
+      if (pathMovement.length > 0) {
+        const last = pathMovement[pathMovement.length - 1];
 
         attendanceUpdate.mutate({
           field: "id",
@@ -181,8 +181,8 @@ export default function InstructorAttendance() {
           autoStopAfterMs: 5000,
         }}
         serviceCallbacks={{
-          onCoords: (c) => (geoRef.current.coords = c),
-          onPath: (p) => (geoRef.current.path = p),
+          onCoords: (c) => setCurrentCoords(c),
+          onPath: (p) => setPathMovement(p),
           onStart: () => console.log("Started tracking"),
           onStop: () => console.log("Stopped"),
           onError: (err) => console.log("Error: ", err),
@@ -213,17 +213,16 @@ export default function InstructorAttendance() {
         </p>
       </div>
 
-      {/* <CameraViewer
+      <CameraViewer
         serviceParameters={{ video: false, facingMode: "user" }}
         serviceCallbacks={{
           onCapture: (_, url) => {
             setCaptureRef(url);
-            // captureRef.current = url;
           },
         }}
         uiParameters={{ showPreview: false }}
       />
-      <img src={captureRef ?? undefined} alt="you" /> */}
+      <img src={captureRef ?? undefined} alt="you" />
     </div>
   );
 }

@@ -1,13 +1,18 @@
-"use client";
-
 import { useState, useMemo } from "react";
 import { useDBOperations } from "@saintrelion/data-access-layer";
-import { GeoViewer } from "../to-be-library/geo/geo-viewer";
+import { formatReadableDate } from "@saintrelion/time-functions";
 import type { User } from "@/models/user";
 import type { AttendanceLog } from "@/models/attendance";
-import type { Timestamp } from "firebase/firestore";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+import { GeoViewer } from "../to-be-library/geo/geo-viewer";
 import { decodePath } from "../to-be-library/geo/lib/parser";
-import { RenderDialog } from "@saintrelion/ui";
 
 export default function AdminAttendancePage() {
   const { useSelect: instructorSelect } = useDBOperations<User>("User");
@@ -35,21 +40,11 @@ export default function AdminAttendancePage() {
   }, [attendanceLogs, selectedInstructor]);
 
   // Group by day
-
   const groupedLogs = useMemo(() => {
     const groups: Record<string, AttendanceLog[]> = {};
 
     instructorLogs.forEach((log) => {
-      const created = new Date(
-        (log.createdAt as unknown as Timestamp).seconds * 1000,
-      );
-
-      // Extract readable day label (e.g. "October 18, 2025")
-      const dayLabel = created.toLocaleDateString("en-US", {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      });
+      const dayLabel = formatReadableDate(log.createdAt);
 
       // Group by that day
       if (!groups[dayLabel]) groups[dayLabel] = [];
@@ -58,6 +53,7 @@ export default function AdminAttendancePage() {
 
     return groups;
   }, [instructorLogs]);
+
   return (
     <div className="grid min-h-screen grid-cols-1 gap-6 p-6 md:grid-cols-3">
       {/* LEFT: Instructor List */}
@@ -144,31 +140,36 @@ export default function AdminAttendancePage() {
 
       {/* Attendance Map Viewer */}
       {selectedDay && (
-        <RenderDialog
+        <Dialog
           open={!!selectedDay}
           onOpenChange={(open) => !open && setSelectedDay(null)}
-          headerTitle={`Movement Path `}
-          description={`View recorded GPS path for ${
-            selectedInstructor?.name ?? ""
-          }`}
         >
-          <div className="h-[450px] w-full">
-            {/* <GeoViewer
-              wrapperClass="h-full w-full"
-              showControls={false}
-              showMap={true}
-              enableLogs={true}
-              onCoordinateChange={() => {}}
-              geoOptions={{
-                externalCoords: parsedPath[0],
-                externalPath: parsedPath.map(({ lat, lng }) => ({
-                  lat,
-                  lng,
-                })),
-              }}
-            /> */}
-          </div>
-        </RenderDialog>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Movement Path</DialogTitle>
+              <DialogDescription>{`View recorded GPS path for ${
+                selectedInstructor?.name ?? ""
+              }`}</DialogDescription>
+            </DialogHeader>
+
+            <div className="h-[450px] w-full">
+              <GeoViewer
+                serviceParameters={{
+                  externalCoords: parsedPath[0],
+                  externalPath: parsedPath.map(({ lat, lng }) => ({
+                    lat,
+                    lng,
+                  })),
+                }}
+                uiParameters={{
+                  showControls: false,
+                  showMap: true,
+                  wrapperClass: "h-full w-full",
+                }}
+              />
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
