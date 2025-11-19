@@ -1,23 +1,23 @@
 import { registerUser } from "@saintrelion/auth-lib";
-import RenderForm from "../to-be-library/forms/render-form";
-import { RenderFormButton } from "../to-be-library/forms/render-form-button";
-import { RenderFormFields } from "../to-be-library/forms/render-form-fields";
-import { buildFieldsFromModel } from "../to-be-library/forms/lib/helper";
 import { Department } from "@/model-types/department";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useDBOperations } from "@saintrelion/data-access-layer";
 import type { User } from "@/models/user";
 import { UserRole } from "@/model-types/userrole";
-import { RenderCard, RenderDialog, RenderTable } from "@saintrelion/ui";
-
-// --- build your fields dynamically ---
-const personalInfoFields = buildFieldsFromModel({
-  employeeID: { type: "text", label: "Employee ID", minLength: 6 },
-  name: { type: "text", label: "Full Name" },
-  email: { type: "email", label: "Email" },
-  department: { type: "select", options: Department, label: "Department" },
-  role: { type: "select", options: UserRole, label: "Role" },
-});
+import {
+  RenderForm,
+  RenderFormButton,
+  RenderFormField,
+} from "@saintrelion/forms";
+import { RenderTable } from "@saintrelion/ui";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface InstructorRow {
   id: string;
@@ -70,30 +70,59 @@ const InstructorRegistrationPage = () => {
         <h1 className="text-xl font-semibold">Instructor Management</h1>
 
         {/* Add Instructor Button (opens form dialog) */}
-        <RenderDialog
-          triggerLabel="Register Instructor"
-          headerTitle="Create Account"
-          description="Fill out the form to register an instructor."
-        >
-          <RenderForm wrapperClass="space-y-6">
-            <RenderFormFields fields={personalInfoFields} />
-            <RenderFormButton
-              buttonLabel="Register"
-              onSubmit={handleRegister}
-            />
-          </RenderForm>
-        </RenderDialog>
+        <Dialog>
+          <DialogTrigger>Register Instructor</DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create Account</DialogTitle>
+              <DialogDescription>
+                Fill out the form to register an instructor.
+              </DialogDescription>
+            </DialogHeader>
+            <RenderForm wrapperClass="space-y-6" onSubmit={handleRegister}>
+              <RenderFormField
+                field={{
+                  label: "Employee ID",
+                  type: "text",
+                  name: "employee_id",
+                  minLength: 6,
+                }}
+              />
+              <RenderFormField
+                field={{ label: "Full Name", type: "text", name: "name" }}
+              />
+              <RenderFormField
+                field={{ label: "Email", type: "email", name: "email" }}
+              />
+              <RenderFormField
+                field={{
+                  label: "Department",
+                  type: "select",
+                  name: "department",
+                  options: Department,
+                }}
+              />
+              <RenderFormField
+                field={{
+                  label: "Role",
+                  type: "select",
+                  name: "role",
+                  options: UserRole,
+                }}
+              />
+              <RenderFormButton buttonLabel="Register" />
+            </RenderForm>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Table occupies full remaining space */}
-      <RenderCard>
-        <RenderTable
-          data={instructorRows}
-          columns={columns}
-          hiddenColumns={["id"]}
-          filters={["name", "department"]}
-        />
-      </RenderCard>
+      <RenderTable
+        data={instructorRows}
+        columns={columns}
+        hiddenColumns={["id"]}
+        filters={["name", "department"]}
+      />
     </div>
   );
 };

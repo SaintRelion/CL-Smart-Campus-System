@@ -3,37 +3,22 @@ import { useState } from "react";
 import { useAuth } from "@saintrelion/auth-lib";
 import { useDBOperations } from "@saintrelion/data-access-layer";
 import type { ClassSubject } from "@/models/class-subject";
-import { buildFieldsFromModel } from "../to-be-library/forms/lib/helper";
-import RenderForm from "../to-be-library/forms/render-form";
-import { RenderFormFields } from "../to-be-library/forms/render-form-fields";
-import { RenderFormButton } from "../to-be-library/forms/render-form-button";
 import { formatReadableTime } from "@saintrelion/time-functions";
-import { RenderCard, RenderDialog, RenderDataCore } from "@saintrelion/ui";
-
-// TODO: CONTINUE WORKING ON FRAMEWORK EXTRACTION AND CLOSE THESE, OH MY GOD, HOW LONG WILL YOU KEEP
-// HOVERING ON THIS FRAMEWORK CREATION???????? YOU STILL HAVE OTHER THINGS TO DO my god
-
-const daysOfWeek = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
-
-const classFields = buildFieldsFromModel({
-  title: { type: "text", label: "Subject Title" },
-  time: { type: "time", label: "Time" },
-  date: { type: "date", label: "Date" },
-  room: { type: "text", label: "Room" },
-  days: { type: "checkbox", options: daysOfWeek, label: "Days" },
-});
-
-const addStudentFields = buildFieldsFromModel({
-  studentName: { type: "text", label: "Student Name" },
-});
+import {
+  RenderForm,
+  RenderFormButton,
+  RenderFormField,
+} from "@saintrelion/forms";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { RenderDataCore } from "@saintrelion/ui";
+import { Button } from "@/components/ui/button";
 
 const InstructorClassManagement = () => {
   const { user } = useAuth();
@@ -59,48 +44,69 @@ const InstructorClassManagement = () => {
     });
   };
 
-  const handleAddStudent = (
-    data: Record<string, string>,
-    cls: ClassSubject,
-  ) => {
-    if (!data.studentName.trim()) return;
+  const handleAddStudent = (data: Record<string, string>) => {
+    if (!data.studentName.trim() || selectedClass == null) return;
     classesUpdate.mutate({
       field: "id",
-      value: cls.id,
-      updates: { students: [...(cls.students || []), data.studentName] },
+      value: selectedClass.id,
+      updates: {
+        students: [...(selectedClass.students || []), data.studentName],
+      },
     });
   };
 
   return (
     <div className="space-y-8 p-6">
       {/* Header + Add Class */}
-      <RenderCard
-        headerTitle="Class Management"
-        ui={{ wrapperClass: "flex justify-between items-center" }}
-      >
-        <RenderDialog
-          triggerLabel="Add New Class"
-          headerTitle="Create New Class"
-          description="Fill in the details to create your class."
-        >
-          <RenderForm wrapperClass="space-y-5">
-            <RenderFormFields fields={classFields} />
-            <RenderFormButton
-              buttonLabel="Create Class"
-              onSubmit={handleAddClass}
-            />
-          </RenderForm>
-        </RenderDialog>
-      </RenderCard>
+      <div className="flex items-center justify-between">
+        <h1>Class Management</h1>
+        <Dialog>
+          <DialogTrigger>
+            <Button>Add New Class</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create New Class</DialogTitle>
+              <DialogDescription>
+                Fill in the details to create your class.
+              </DialogDescription>
+            </DialogHeader>
+            <RenderForm wrapperClass="space-y-5" onSubmit={handleAddClass}>
+              <RenderFormField
+                field={{
+                  label: "Subject Title",
+                  type: "text",
+                  name: "subject_title",
+                }}
+              />
+              <RenderFormField
+                field={{ label: "Time", type: "time", name: "time" }}
+              />
+              <RenderFormField
+                field={{ label: "Date", type: "date", name: "date" }}
+              />
+              <RenderFormField
+                field={{ label: "Room", type: "text", name: "room" }}
+              />
+              <RenderFormField
+                field={{ label: "Days", type: "checkbox", name: "Days" }}
+              />
+              <RenderFormButton buttonLabel="Create Class" />
+            </RenderForm>
+          </DialogContent>
+        </Dialog>
+      </div>
 
       {/* CLASS LIST */}
-      <RenderCard headerTitle="My Classes">
+      <div className="">
+        <h1>My Classes</h1>
         <RenderDataCore
+          ui={{ content: { wrapperClassName: "flex flex-col space-y-4" } }}
           data={classes}
           renderItem={(item) => (
-            <>
+            <div className="rounded-md p-4 shadow-xl">
               <button
-                className="text-left font-medium text-blue-600 hover:underline"
+                className="bg-transparent font-medium text-blue-600 hover:bg-transparent hover:underline"
                 onClick={() => setSelectedClass(item)}
               >
                 {item.title}
@@ -112,46 +118,63 @@ const InstructorClassManagement = () => {
                 Days: {item.days.join(", ")}
               </p>
               <div className="mt-3">
-                <RenderDialog
-                  triggerLabel="Add Student"
-                  headerTitle={`Add Student to ${item.title}`}
-                >
-                  <div className="space-y-3">
-                    <RenderForm>
-                      <RenderFormFields
-                        wrapperClass="w-full mb-4"
-                        fields={addStudentFields}
-                      />
-                      <RenderFormButton
-                        buttonLabel="Add Student"
-                        onSubmit={(data) => handleAddStudent(data, item)}
-                      />
-                    </RenderForm>
-                  </div>
-                </RenderDialog>
+                <Dialog>
+                  <DialogTrigger>
+                    <Button className="bg-black/80 px-3 text-xs">
+                      Add Student
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Add Student to ${item.title}</DialogTitle>
+                      <DialogDescription>Desc</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-3">
+                      <RenderForm
+                        wrapperClass="space-y-2"
+                        onSubmit={handleAddStudent}
+                      >
+                        <RenderFormField
+                          field={{
+                            label: "Student Name",
+                            type: "text",
+                            name: "student_name",
+                          }}
+                        />
+                        <RenderFormButton buttonLabel="Add Student" />
+                      </RenderForm>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
-            </>
+            </div>
           )}
         />
-      </RenderCard>
+      </div>
 
       {/* STUDENT LIST DIALOG */}
       {selectedClass && (
-        <RenderDialog
+        <Dialog
           open={!!selectedClass}
           onOpenChange={(open) => !open && setSelectedClass(null)}
-          headerTitle={selectedClass.title}
-          description={`Students enrolled in this class.`}
         >
-          <RenderDataCore
-            data={selectedClass.students}
-            renderItem={(item) => (
-              <>
-                <p>{item}</p>
-              </>
-            )}
-          />
-        </RenderDialog>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>{selectedClass.title}</DialogTitle>
+              <DialogDescription>
+                Students enrolled in this class.
+              </DialogDescription>
+            </DialogHeader>
+            <RenderDataCore
+              data={selectedClass.students}
+              renderItem={(item) => (
+                <>
+                  <p>{item}</p>
+                </>
+              )}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
