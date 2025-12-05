@@ -1,6 +1,6 @@
 import type { ClassSubject } from "@/models/class-subject";
 import { useAuth } from "@saintrelion/auth-lib";
-import { useDBOperations } from "@saintrelion/data-access-layer";
+import { useDBOperationsLocked } from "@saintrelion/data-access-layer";
 import { useEffect, useState } from "react";
 import InstructorAttendance from "../attendance/InstructorAttendance";
 import {
@@ -12,12 +12,15 @@ import {
 
 const InstructorDashboardPage = () => {
   const { user } = useAuth();
-  const { useSelect: classesSelect } =
-    useDBOperations<ClassSubject>("ClassSubject");
 
+  // Class Subject Select
+  const { useSelect: classesSelect } =
+    useDBOperationsLocked<ClassSubject>("ClassSubject");
+
+  // Instructor Classes Select
   const { data: instructorClasses = [] } = classesSelect({
-    firebaseOptions: { filterField: "employeeID", value: user.employeeID },
-    mockOptions: { filterFn: (cls) => cls.employeeID === user.employeeID },
+    firebaseOptions: { filterField: "employeeId", value: user.employeeId },
+    mockOptions: { filterFn: (cls) => cls.employeeId === user.employeeId },
   });
 
   const [todayClasses, setTodayClasses] = useState<ClassSubject[]>([]);

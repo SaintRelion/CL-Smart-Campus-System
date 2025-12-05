@@ -15,7 +15,7 @@ apiRegister("ClassSubject", "classsubject");
 mockRegister<ClassSubject>("ClassSubject", [
   {
     id: "1",
-    userID: "1",
+    employeeId: "1",
     title: "Introduction to Programming",
     days: ["Monday", "Wednesday"],
     time: "08:00",
@@ -24,7 +24,7 @@ mockRegister<ClassSubject>("ClassSubject", [
   },
   {
     id: "2",
-    userID: "2",
+    employeeId: "2",
     title: "Database Systems",
     days: ["Tuesday", "Thursday"],
     time: "10:00",

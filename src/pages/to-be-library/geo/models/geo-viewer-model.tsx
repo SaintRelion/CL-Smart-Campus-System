@@ -17,7 +17,6 @@ export interface GeoViewerUIParameters {
   autoStart?: boolean;
   showDefaultData?: boolean;
   showDefaultControls?: boolean;
-  showControls?: boolean;
   showMap?: boolean;
   showMarker?: boolean;
   mapHeight?: number | string;

@@ -1,7 +1,6 @@
-import { registerUser } from "@saintrelion/auth-lib";
+import { useRegisterUser } from "@saintrelion/auth-lib";
 import { Department } from "@/model-types/department";
 import type { ColumnDef } from "@tanstack/react-table";
-import { useDBOperations } from "@saintrelion/data-access-layer";
 import type { User } from "@/models/user";
 import { UserRole } from "@/model-types/userrole";
 import {
@@ -18,17 +17,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useDBOperationsLocked } from "@saintrelion/data-access-layer";
 
 interface InstructorRow {
   id: string;
-  employeeID: string;
+  employeeId: string;
   name: string;
   email: string;
   department: string;
 }
 
 const columns: ColumnDef<InstructorRow>[] = [
-  { header: "Employee ID", accessorKey: "employeeID" },
+  { header: "Employee ID", accessorKey: "employeeId" },
   { header: "Name", accessorKey: "name" },
   { header: "Email", accessorKey: "email" },
   { header: "Department", accessorKey: "department" },
@@ -36,7 +37,7 @@ const columns: ColumnDef<InstructorRow>[] = [
 ];
 
 const InstructorRegistrationPage = () => {
-  const { useSelect: usersSelect } = useDBOperations<User>("User");
+  const { useSelect: usersSelect } = useDBOperationsLocked<User>("User");
   const { data: users = [] } = usersSelect({
     firebaseOptions: {
       filterField: "role",
@@ -47,19 +48,25 @@ const InstructorRegistrationPage = () => {
 
   const instructorRows: InstructorRow[] = users.map((user) => ({
     id: user.id,
-    employeeID: user.employeeID ?? "—",
+    employeeId: user.employeeId ?? "—",
     name: user.name ?? "—",
     email: user.email ?? "—",
     department: user.department ?? "—",
     role: user.role,
   }));
 
+  const registerUser = useRegisterUser();
+
   const handleRegister = (data: Record<string, string>) => {
-    registerUser(data.email, data.employeeID, {
-      employeeID: data.employeeID,
-      name: data.name,
-      department: data.department,
-      role: data.role,
+    registerUser.run({
+      info: {
+        email: data.email,
+        employeeId: data.employeeId,
+        name: data.name,
+        department: data.department,
+        role: data.role,
+      },
+      password: data.employeeID,
     });
   };
 
@@ -71,7 +78,9 @@ const InstructorRegistrationPage = () => {
 
         {/* Add Instructor Button (opens form dialog) */}
         <Dialog>
-          <DialogTrigger>Register Instructor</DialogTrigger>
+          <DialogTrigger asChild>
+            <Button>Register Instructor</Button>
+          </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create Account</DialogTitle>
@@ -79,20 +88,26 @@ const InstructorRegistrationPage = () => {
                 Fill out the form to register an instructor.
               </DialogDescription>
             </DialogHeader>
-            <RenderForm wrapperClass="space-y-6" onSubmit={handleRegister}>
+            <RenderForm wrapperClass="space-y-6">
               <RenderFormField
                 field={{
                   label: "Employee ID",
                   type: "text",
-                  name: "employee_id",
+                  name: "employeeId",
                   minLength: 6,
                 }}
+                wrapperClassName="flex flex-col"
+                labelClassName="mb-1"
               />
               <RenderFormField
                 field={{ label: "Full Name", type: "text", name: "name" }}
+                wrapperClassName="flex flex-col"
+                labelClassName="mb-1"
               />
               <RenderFormField
                 field={{ label: "Email", type: "email", name: "email" }}
+                wrapperClassName="flex flex-col"
+                labelClassName="mb-1"
               />
               <RenderFormField
                 field={{
@@ -101,6 +116,8 @@ const InstructorRegistrationPage = () => {
                   name: "department",
                   options: Department,
                 }}
+                wrapperClassName="flex flex-col"
+                labelClassName="mb-1"
               />
               <RenderFormField
                 field={{
@@ -109,8 +126,14 @@ const InstructorRegistrationPage = () => {
                   name: "role",
                   options: UserRole,
                 }}
+                wrapperClassName="flex flex-col"
+                labelClassName="mb-1"
               />
-              <RenderFormButton buttonLabel="Register" />
+              <RenderFormButton
+                buttonLabel="Register"
+                isDisabled={registerUser.isLocked}
+                onSubmit={handleRegister}
+              />
             </RenderForm>
           </DialogContent>
         </Dialog>

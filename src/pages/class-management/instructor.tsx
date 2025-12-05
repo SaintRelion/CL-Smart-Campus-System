@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 import { useAuth } from "@saintrelion/auth-lib";
-import { useDBOperations } from "@saintrelion/data-access-layer";
+import { useDBOperationsLocked } from "@saintrelion/data-access-layer";
 import type { ClassSubject } from "@/models/class-subject";
 import { formatReadableTime } from "@saintrelion/time-functions";
 import {
@@ -20,33 +20,43 @@ import {
 import { RenderDataCore } from "@saintrelion/ui";
 import { Button } from "@/components/ui/button";
 
+const days = [
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday",
+];
 const InstructorClassManagement = () => {
   const { user } = useAuth();
 
+  // Classes Select, Insert, Update
   const {
     useSelect: classesSelect,
     useInsert: classesInsert,
     useUpdate: classesUpdate,
-  } = useDBOperations<ClassSubject>("ClassSubject");
+  } = useDBOperationsLocked<ClassSubject>("ClassSubject");
   const { data: classes = [] } = classesSelect({
-    firebaseOptions: { filterField: "employeeID", value: user.employeeID },
-    mockOptions: { filterFn: (c) => c.employeeID === user.employeeID },
+    firebaseOptions: { filterField: "employeeId", value: user.employeeId },
+    mockOptions: { filterFn: (c) => c.employeeId === user.employeeId },
   });
 
   const [selectedClass, setSelectedClass] = useState<ClassSubject | null>(null);
 
   const handleAddClass = (data: Record<string, string>) => {
     console.log(data);
-    classesInsert.mutate({
+    classesInsert.run({
       ...data,
-      employeeID: user.employeeID,
+      employeeId: user.employeeId,
       students: [],
     });
   };
 
   const handleAddStudent = (data: Record<string, string>) => {
     if (!data.studentName.trim() || selectedClass == null) return;
-    classesUpdate.mutate({
+    classesUpdate.run({
       field: "id",
       value: selectedClass.id,
       updates: {
@@ -71,27 +81,32 @@ const InstructorClassManagement = () => {
                 Fill in the details to create your class.
               </DialogDescription>
             </DialogHeader>
-            <RenderForm wrapperClass="space-y-5" onSubmit={handleAddClass}>
+            <RenderForm wrapperClass="space-y-5">
               <RenderFormField
                 field={{
                   label: "Subject Title",
                   type: "text",
-                  name: "subject_title",
+                  name: "title",
                 }}
               />
               <RenderFormField
                 field={{ label: "Time", type: "time", name: "time" }}
               />
               <RenderFormField
-                field={{ label: "Date", type: "date", name: "date" }}
-              />
-              <RenderFormField
                 field={{ label: "Room", type: "text", name: "room" }}
               />
               <RenderFormField
-                field={{ label: "Days", type: "checkbox", name: "Days" }}
+                field={{
+                  label: "Days",
+                  type: "multi-select",
+                  name: "days",
+                  options: days,
+                }}
               />
-              <RenderFormButton buttonLabel="Create Class" />
+              <RenderFormButton
+                buttonLabel="Create Class"
+                onSubmit={handleAddClass}
+              />
             </RenderForm>
           </DialogContent>
         </Dialog>
@@ -118,9 +133,14 @@ const InstructorClassManagement = () => {
                 Days: {item.days.join(", ")}
               </p>
               <div className="mt-3">
-                <Dialog>
+                <Dialog
+                  onOpenChange={(open) => !open && setSelectedClass(null)}
+                >
                   <DialogTrigger>
-                    <Button className="bg-black/80 px-3 text-xs">
+                    <Button
+                      className="bg-black/80 px-3 text-xs"
+                      onClick={() => setSelectedClass(item)}
+                    >
                       Add Student
                     </Button>
                   </DialogTrigger>
@@ -130,18 +150,18 @@ const InstructorClassManagement = () => {
                       <DialogDescription>Desc</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-3">
-                      <RenderForm
-                        wrapperClass="space-y-2"
-                        onSubmit={handleAddStudent}
-                      >
+                      <RenderForm wrapperClass="space-y-2">
                         <RenderFormField
                           field={{
                             label: "Student Name",
                             type: "text",
-                            name: "student_name",
+                            name: "studentName",
                           }}
                         />
-                        <RenderFormButton buttonLabel="Add Student" />
+                        <RenderFormButton
+                          buttonLabel="Add Student"
+                          onSubmit={handleAddStudent}
+                        />
                       </RenderForm>
                     </div>
                   </DialogContent>

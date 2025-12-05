@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useDBOperations } from "@saintrelion/data-access-layer";
+import { useDBOperationsLocked } from "@saintrelion/data-access-layer";
 import { formatReadableDate } from "@saintrelion/time-functions";
 import type { User } from "@/models/user";
 import type { AttendanceLog } from "@/models/attendance";
@@ -15,13 +15,15 @@ import { GeoViewer } from "../to-be-library/geo/geo-viewer";
 import { decodePath } from "../to-be-library/geo/lib/parser";
 
 export default function AdminAttendancePage() {
-  const { useSelect: instructorSelect } = useDBOperations<User>("User");
+  // Instructor Select
+  const { useSelect: instructorSelect } = useDBOperationsLocked<User>("User");
   const { data: instructors = [] } = instructorSelect({
     firebaseOptions: { filterField: "role", value: "instructor" },
   });
 
+  // Instructor Attendance Select
   const { useSelect: attendanceSelect } =
-    useDBOperations<AttendanceLog>("AttendanceLog");
+    useDBOperationsLocked<AttendanceLog>("AttendanceLog");
   const { data: attendanceLogs = [] } = attendanceSelect({});
 
   const [selectedInstructor, setSelectedInstructor] = useState<User | null>(
@@ -35,7 +37,7 @@ export default function AdminAttendancePage() {
   const instructorLogs = useMemo(() => {
     if (!selectedInstructor) return [];
     return attendanceLogs.filter(
-      (log) => log.employeeID === selectedInstructor.employeeID,
+      (log) => log.employeeId === selectedInstructor.employeeId,
     );
   }, [attendanceLogs, selectedInstructor]);
 
@@ -162,7 +164,7 @@ export default function AdminAttendancePage() {
                   })),
                 }}
                 uiParameters={{
-                  showControls: false,
+                  showDefaultControls: false,
                   showMap: true,
                   wrapperClass: "h-full w-full",
                 }}

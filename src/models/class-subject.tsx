@@ -1,6 +1,6 @@
 export interface ClassSubject {
   id: string;
-  employeeID: string;
+  employeeId: string;
   title: string;
   days: string[];
   time: string;

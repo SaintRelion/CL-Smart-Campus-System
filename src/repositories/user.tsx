@@ -15,7 +15,7 @@ apiRegister("User", "user");
 mockRegister<User>("User", [
   {
     id: "1",
-    employeeID: "125689",
+    employeeId: "125689",
     name: "Alice Johnson",
     email: "alice@example.com",
     department: "CBA",
@@ -23,7 +23,7 @@ mockRegister<User>("User", [
   },
   {
     id: "2",
-    employeeID: "675698",
+    employeeId: "675698",
     name: "Bob Smith",
     email: "bob@example.com",
     department: "CCS",
