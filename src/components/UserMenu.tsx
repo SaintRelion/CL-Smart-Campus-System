@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { CircleUser, LogOut } from "lucide-react";
+import { logout } from "@saintrelion/auth-lib";
 
 export default function UserMenu() {
   const [open, setOpen] = useState(false);
@@ -26,11 +27,9 @@ export default function UserMenu() {
       {open && (
         <div className="absolute right-0 z-50 mt-2 w-48 rounded-lg border bg-white shadow-lg">
           <button
-            onClick={() => {
+            onClick={async () => {
               setOpen(false);
-
-              console.log("Logging out...");
-              window.location.href = "/login";
+              await logout();
             }}
             className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-gray-100"
           >

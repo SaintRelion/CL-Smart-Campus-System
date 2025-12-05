@@ -1,4 +1,4 @@
-import { firebaseLoginWithOtherInfo, useAuth } from "@saintrelion/auth-lib";
+import { useAuth, useLoginWithCredentials } from "@saintrelion/auth-lib";
 import {
   RenderForm,
   RenderFormButton,
@@ -10,14 +10,16 @@ const LoginPage = () => {
   const { setUser } = useAuth();
   const navigate = useNavigate();
 
+  const loginWithCredentials = useLoginWithCredentials();
+
   const handleLogin = async (data: Record<string, string>) => {
     // Normally you'd call API here, then save returned user
     console.log("Raw submission:", data);
 
-    await firebaseLoginWithOtherInfo(
-      "employeeID",
-      data.employeeID,
-      data.employeeID,
+    await loginWithCredentials.run(
+      "employeeId",
+      data.employeeId,
+      data.employeeId,
       setUser,
       (loggedInUser) => {
         navigate("/");
@@ -31,22 +33,21 @@ const LoginPage = () => {
     <div className="h-screen w-full bg-blue-100">
       <div className="flex h-full flex-col items-center justify-center space-y-4">
         <h1 className="text-center text-2xl font-bold">Login</h1>
-        <RenderForm
-          wrapperClass="flex flex-col items-center space-y-2"
-          onSubmit={handleLogin}
-        >
+        <RenderForm wrapperClass="flex flex-col items-center space-y-2">
           <RenderFormField
             field={{
               type: "text",
-              name: "employeeID",
+              name: "employeeId",
               placeholder: "ID",
             }}
             inputClassName="rounded-md border border-gray-400 py-1 pl-2 focus:ring-1 focus:ring-blue-400 focus:outline-none"
           />
 
           <RenderFormButton
-            buttonClass="bg-blue-400 hover:bg-blue-500"
+            buttonClassName="bg-blue-400 hover:bg-blue-500"
             buttonLabel="Login"
+            isDisabled={loginWithCredentials.isLocked}
+            onSubmit={handleLogin}
           />
         </RenderForm>
       </div>

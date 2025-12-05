@@ -1,9 +1,10 @@
 import { useState, useRef } from "react";
-import { useDBOperations } from "@saintrelion/data-access-layer";
+import { useDBOperationsLocked } from "@saintrelion/data-access-layer";
 import type { AttendanceLog } from "@/models/attendance";
 import { useAuth } from "@saintrelion/auth-lib";
 
 import {
+  formatReadableDate,
   formatReadableDateTime,
   getCurrentDateTimeString,
   isSameDay,
@@ -11,40 +12,42 @@ import {
 
 import { appendPath, encodePath } from "../to-be-library/geo/lib/parser";
 import { GeoViewer } from "../to-be-library/geo/geo-viewer";
-import { CameraViewer } from "../to-be-library/camera/camera-viewer";
 import type { Coords } from "../to-be-library/geo/models/use-geo-model";
 
 export default function InstructorAttendance() {
   const { user } = useAuth();
 
-  const [captureRef, setCaptureRef] = useState<string | null>("");
-
   const [isCheckedIn, setIsCheckedIn] = useState(false);
 
   const [currentCoords, setCurrentCoords] = useState<Coords>();
-  console.log(currentCoords);
   const [pathMovement, setPathMovement] = useState<Coords[]>([]);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Attendance Select, Update, Insert
   const {
     useSelect: attendanceSelect,
-    useUpdate: attendanceUpdate,
     useInsert: attendanceInsert,
-  } = useDBOperations<AttendanceLog>("AttendanceLog");
+    useUpdate: attendanceUpdate,
+  } = useDBOperationsLocked<AttendanceLog>("AttendanceLog");
   const { data: attendanceLogs = [] } = attendanceSelect({
     firebaseOptions: {
       filterField: "employeeID",
       value: user.employeeID,
     },
     mockOptions: {
-      filterFn: (a) => a.employeeID === user.employeeID,
+      filterFn: (a) => a.employeeId === user.employeeId,
     },
   });
 
   const todayAttendance = attendanceLogs.find((log) => {
     const today = getCurrentDateTimeString();
-    if (isSameDay(log.createdAt, today)) return log;
+    console.log("TODAY--");
+    console.log(formatReadableDate(today));
+    console.log(formatReadableDate(log.createdAt));
+
+    if (isSameDay(formatReadableDate(log.createdAt), formatReadableDate(today)))
+      return log;
   });
 
   // useEffect(() => {
@@ -98,42 +101,43 @@ export default function InstructorAttendance() {
   // 🟢 Toggle Attendance
   const handleAttendanceToggle = () => {
     const logId = todayAttendance?.id;
+    console.log(isCheckedIn);
     if (!isCheckedIn) {
       // ---- CHECK IN ----
-      const now = new Date().toISOString();
+      const now = getCurrentDateTimeString();
       setIsCheckedIn(true);
 
       // if no record for today, create one
       if (!logId) {
-        attendanceInsert.mutate({
-          employeeID: user.employeeID,
+        attendanceInsert.run({
+          employeeId: user.employeeId,
           timeIn: now,
           pathMovement: encodePath(pathMovement),
         });
       }
 
       // Start periodic path capture every 5 minutes
-      intervalRef.current = setInterval(
-        () => {
-          if (pathMovement.length > 0) {
-            const last = pathMovement[pathMovement.length - 1];
+      // intervalRef.current = setInterval(
+      //   () => {
+      //     if (pathMovement.length > 0) {
+      //       const last = pathMovement[pathMovement.length - 1];
 
-            attendanceUpdate.mutate({
-              field: "id",
-              value: logId!,
-              updates: {
-                pathMovement: appendPath(todayAttendance?.pathMovement, last),
-              },
-            });
-          }
-        },
-        5 * 60 * 1000,
-      ); // 5 minutes
+      //       attendanceUpdate.mutate({
+      //         field: "id",
+      //         value: logId!,
+      //         updates: {
+      //           pathMovement: appendPath(todayAttendance?.pathMovement, last),
+      //         },
+      //       });
+      //     }
+      //   },
+      //   5 * 60 * 1000,
+      // ); // 5 minutes
     } else {
       // ---- CHECK OUT ----
       setIsCheckedIn(false);
 
-      const now = new Date().toISOString();
+      const now = getCurrentDateTimeString();
 
       // Stop tracking timer
       if (intervalRef.current) {
@@ -145,7 +149,7 @@ export default function InstructorAttendance() {
       if (pathMovement.length > 0) {
         const last = pathMovement[pathMovement.length - 1];
 
-        attendanceUpdate.mutate({
+        attendanceUpdate.run({
           field: "id",
           value: logId!,
           updates: {
@@ -189,7 +193,7 @@ export default function InstructorAttendance() {
         }}
         uiParameters={{
           autoStart: true,
-          showDefaultControls: true,
+          showDefaultControls: false,
           showDefaultData: true,
           showMap: true,
         }}
@@ -212,17 +216,6 @@ export default function InstructorAttendance() {
           <strong>Path Points Recorded:</strong> {pathMovement.length}
         </p>
       </div>
-
-      <CameraViewer
-        serviceParameters={{ video: false, facingMode: "user" }}
-        serviceCallbacks={{
-          onCapture: (_, url) => {
-            setCaptureRef(url);
-          },
-        }}
-        uiParameters={{ showPreview: false }}
-      />
-      <img src={captureRef ?? undefined} alt="you" />
     </div>
   );
 }

@@ -3,7 +3,7 @@ import type { UserRole } from "../model-types/userrole";
 
 export interface User {
   id: string;
-  employeeID: string;
+  employeeId: string;
   name: string;
   email: string;
   department: Department;

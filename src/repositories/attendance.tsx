@@ -15,7 +15,7 @@ apiRegister("AttendanceLog", "attendancelog");
 mockRegister<AttendanceLog>("AttendanceLog", [
   {
     id: "1",
-    employeeID: "1",
+    employeeId: "1",
     createdAt: "2025-10-01T08:00:00Z",
     day: "2025-10-01",
     timeIn: "2025-10-01T08:00:00Z",
@@ -24,7 +24,7 @@ mockRegister<AttendanceLog>("AttendanceLog", [
   },
   {
     id: "2",
-    employeeID: "1",
+    employeeId: "1",
     createdAt: "2025-10-02T08:10:00Z",
     day: "2025-10-02",
     timeIn: "2025-10-02T08:10:00Z",
@@ -34,7 +34,7 @@ mockRegister<AttendanceLog>("AttendanceLog", [
   },
   {
     id: "3",
-    employeeID: "2",
+    employeeId: "2",
     createdAt: "2025-10-01T07:55:00Z",
     day: "2025-10-01",
     timeIn: "2025-10-01T07:55:00Z",

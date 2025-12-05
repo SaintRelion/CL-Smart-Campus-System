@@ -6,11 +6,7 @@ import LoginPage from "./pages/authentication/LoginPage";
 import InstructorRegistrationPage from "./pages/instructor-registration/InstructorRegistrationPage";
 
 import { ProtectedRoute } from "@saintrelion/auth-lib";
-import {
-  registerGroupAppRoutes,
-  registerAppRoute,
-  createAppRouter,
-} from "@saintrelion/routers";
+import { registerGroupAppRoutes, createAppRouter } from "@saintrelion/routers";
 // ✅ Register protected routes (with layout)
 registerGroupAppRoutes({
   layout: (
@@ -21,6 +17,9 @@ registerGroupAppRoutes({
   path: "/",
   errorElement: <NotFound />,
   children: [
+    // PUBLIC
+    { path: "/login", public: true, element: <LoginPage /> },
+    // RESTRICTED
     {
       index: true,
       path: "/",
@@ -42,9 +41,6 @@ registerGroupAppRoutes({
     },
   ],
 });
-
-// ✅ Public routes
-registerAppRoute({ path: "/login", element: <LoginPage /> });
 
 // ✅ Create router
 export const router = createAppRouter();
