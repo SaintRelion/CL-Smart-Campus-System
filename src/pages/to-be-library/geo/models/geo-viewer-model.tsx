@@ -1,20 +1,17 @@
 import type { JSX } from "react";
-import type {
-  GeoServiceCallbacks,
-  GeoServiceProps,
-  GeoServiceStates,
-  GeoServiceBehaviors,
-} from "./use-geo-model";
+import type { GeoState } from "./geo-state-model";
 
 export interface GeoViewerProps {
-  serviceParameters: GeoServiceProps;
-  serviceCallbacks?: GeoServiceCallbacks;
   uiParameters?: GeoViewerUIParameters;
-  renderUI?: (ctx: GeoServiceStates & GeoServiceBehaviors) => JSX.Element;
+  renderUI?: (
+    ctx: Pick<
+      GeoState,
+      "coords" | "path" | "distance" | "isRunning" | "start" | "stop" | "reset"
+    >,
+  ) => JSX.Element;
 }
 
 export interface GeoViewerUIParameters {
-  autoStart?: boolean;
   showDefaultData?: boolean;
   showDefaultControls?: boolean;
   showMap?: boolean;

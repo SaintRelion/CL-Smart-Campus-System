@@ -9,9 +9,9 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect } from "react";
 
-import { useGeoService } from "./use-geo";
+import { useGeoStore } from "./useGeoStore";
 import type { GeoViewerProps } from "./models/geo-viewer-model";
-import type { Coords } from "./models/use-geo-model";
+import type { Coords } from "./models/geo-state-model";
 
 function Recenter({ coords }: { coords: Coords }) {
   const map = useMap();
@@ -21,24 +21,16 @@ function Recenter({ coords }: { coords: Coords }) {
   return null;
 }
 
-export function GeoViewer({
-  serviceParameters,
-  serviceCallbacks,
-  uiParameters,
-  renderUI,
-}: GeoViewerProps) {
-  const { serviceStates, serviceBehaviors } = useGeoService(
-    serviceParameters,
-    serviceCallbacks,
-  );
-
-  const ctx = {
-    ...serviceStates,
-    ...serviceBehaviors,
-  };
+export function GeoViewer({ uiParameters, renderUI }: GeoViewerProps) {
+  const coords = useGeoStore((s) => s.coords);
+  const path = useGeoStore((s) => s.path);
+  const distance = useGeoStore((s) => s.distance);
+  const isRunning = useGeoStore((s) => s.isRunning);
+  const start = useGeoStore((s) => s.start);
+  const stop = useGeoStore((s) => s.stop);
+  const reset = useGeoStore((s) => s.reset);
 
   const {
-    autoStart = false,
     showDefaultData = true,
     showDefaultControls = true,
     showMap = true,
@@ -46,14 +38,6 @@ export function GeoViewer({
     mapHeight = "16rem",
     wrapperClass = "",
   } = uiParameters ?? {};
-
-  // autoStart when first mounted
-  useEffect(() => {
-    console.log("Auto");
-    if (autoStart) serviceBehaviors.start();
-    // return serviceBehaviors.stop();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   const markerIcon = L.icon({
     iconUrl: "/my-marker.png",
@@ -68,37 +52,34 @@ export function GeoViewer({
       {/* Map Section */}
       {showMap && (
         <MapContainer
-          center={ctx.coords || { lat: 0, lng: 0 }}
+          center={coords || { lat: 0, lng: 0 }}
           zoom={16}
           scrollWheelZoom
           style={{ height: mapHeight, width: "100%" }}
           className="rounded"
         >
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-          {showMarker && ctx.coords && (
-            <Marker position={ctx.coords} icon={markerIcon} />
+          {showMarker && coords && (
+            <Marker position={coords} icon={markerIcon} />
           )}
-          {ctx.path.length > 1 && (
-            <Polyline positions={ctx.path} color="blue" />
-          )}
-          {ctx.coords && <Recenter coords={ctx.coords} />}
+          {path.length > 1 && <Polyline positions={path} color="blue" />}
+          {coords && <Recenter coords={coords} />}
         </MapContainer>
       )}
 
       {renderUI ? (
-        renderUI(ctx)
+        renderUI({ coords, path, distance, isRunning, start, stop, reset })
       ) : (
         <>
           {showDefaultData && (
             <div className="w-full text-sm text-gray-600">
-              {ctx.coords ? (
+              {coords ? (
                 <>
                   <p>
-                    Lat: {ctx.coords.lat.toFixed(6)}, Lng:{" "}
-                    {ctx.coords.lng.toFixed(6)}
+                    Lat: {coords.lat.toFixed(6)}, Lng: {coords.lng.toFixed(6)}
                   </p>
-                  {ctx.path.length > 0 && (
-                    <p>Distance: {(ctx.distance / 1000).toFixed(3)} km</p>
+                  {path.length > 0 && (
+                    <p>Distance: {(distance / 1000).toFixed(3)} km</p>
                   )}
                 </>
               ) : (
@@ -109,21 +90,21 @@ export function GeoViewer({
           {showDefaultControls && (
             <div className="flex gap-2">
               <button
-                onClick={ctx.start}
-                disabled={ctx.isRunning}
+                onClick={start}
+                disabled={isRunning}
                 className="rounded bg-green-600 px-3 py-1 text-white"
               >
                 Start
               </button>
               <button
-                onClick={ctx.stop}
-                disabled={!ctx.isRunning}
+                onClick={stop}
+                disabled={!isRunning}
                 className="rounded bg-red-600 px-3 py-1 text-white"
               >
                 Stop
               </button>
               <button
-                onClick={ctx.reset}
+                onClick={reset}
                 className="rounded bg-gray-600 px-3 py-1 text-white"
               >
                 Reset

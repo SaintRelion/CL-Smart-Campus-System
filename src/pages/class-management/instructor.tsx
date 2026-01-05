@@ -71,7 +71,7 @@ const InstructorClassManagement = () => {
       <div className="flex items-center justify-between">
         <h1>Class Management</h1>
         <Dialog>
-          <DialogTrigger>
+          <DialogTrigger asChild>
             <Button>Add New Class</Button>
           </DialogTrigger>
           <DialogContent>
@@ -105,6 +105,7 @@ const InstructorClassManagement = () => {
               />
               <RenderFormButton
                 buttonLabel="Create Class"
+                isDisabled={classesInsert.isLocked}
                 onSubmit={handleAddClass}
               />
             </RenderForm>
@@ -115,61 +116,65 @@ const InstructorClassManagement = () => {
       {/* CLASS LIST */}
       <div className="">
         <h1>My Classes</h1>
-        <RenderDataCore
-          ui={{ content: { wrapperClassName: "flex flex-col space-y-4" } }}
-          data={classes}
-          renderItem={(item) => (
-            <div className="rounded-md p-4 shadow-xl">
-              <button
-                className="bg-transparent font-medium text-blue-600 hover:bg-transparent hover:underline"
-                onClick={() => setSelectedClass(item)}
-              >
-                {item.title}
-              </button>
-              <p className="text-sm text-gray-600">
-                {formatReadableTime(item.time)} • {item.room || "No Room"}
-              </p>
-              <p className="text-xs text-gray-500">
-                Days: {item.days.join(", ")}
-              </p>
-              <div className="mt-3">
-                <Dialog
-                  onOpenChange={(open) => !open && setSelectedClass(null)}
+        {classes.length == 0 ? (
+          <div className="text-gray-500 italic">No classes</div>
+        ) : (
+          <RenderDataCore
+            ui={{ content: { wrapperClassName: "flex flex-col space-y-4" } }}
+            data={classes}
+            renderItem={(item) => (
+              <div className="rounded-md p-4 shadow-xl">
+                <button
+                  className="bg-transparent font-medium text-blue-600 hover:bg-transparent hover:underline"
+                  onClick={() => setSelectedClass(item)}
                 >
-                  <DialogTrigger>
-                    <Button
-                      className="bg-black/80 px-3 text-xs"
-                      onClick={() => setSelectedClass(item)}
-                    >
-                      Add Student
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add Student to ${item.title}</DialogTitle>
-                      <DialogDescription>Desc</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-3">
-                      <RenderForm wrapperClass="space-y-2">
-                        <RenderFormField
-                          field={{
-                            label: "Student Name",
-                            type: "text",
-                            name: "studentName",
-                          }}
-                        />
-                        <RenderFormButton
-                          buttonLabel="Add Student"
-                          onSubmit={handleAddStudent}
-                        />
-                      </RenderForm>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                  {item.title}
+                </button>
+                <p className="text-sm text-gray-600">
+                  {formatReadableTime(item.time)} • {item.room || "No Room"}
+                </p>
+                <p className="text-xs text-gray-500">
+                  Days: {item.days.join(", ")}
+                </p>
+                <div className="mt-3">
+                  <Dialog
+                    onOpenChange={(open) => !open && setSelectedClass(null)}
+                  >
+                    <DialogTrigger asChild>
+                      <Button
+                        className="bg-black/80 px-3 text-xs"
+                        onClick={() => setSelectedClass(item)}
+                      >
+                        Add Student
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Add Student to ${item.title}</DialogTitle>
+                        <DialogDescription>Desc</DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-3">
+                        <RenderForm wrapperClass="space-y-2">
+                          <RenderFormField
+                            field={{
+                              label: "Student Name",
+                              type: "text",
+                              name: "studentName",
+                            }}
+                          />
+                          <RenderFormButton
+                            buttonLabel="Add Student"
+                            onSubmit={handleAddStudent}
+                          />
+                        </RenderForm>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
               </div>
-            </div>
-          )}
-        />
+            )}
+          />
+        )}
       </div>
 
       {/* STUDENT LIST DIALOG */}

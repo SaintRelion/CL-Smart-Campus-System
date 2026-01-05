@@ -9,23 +9,24 @@ export interface GeoServiceProps {
   externalPath?: Coords[];
 }
 
-export interface GeoServiceStates {
+export interface GeoState {
+  // States
   coords: Coords | null;
   path: Coords[];
   distance: number;
   isRunning: boolean;
-}
 
-export interface GeoServiceBehaviors {
+  // Parameters
+  params: GeoServiceProps;
+
+  // Behaviors
+  initTracking: () => void;
   start: () => void;
   stop: () => void;
   reset: () => void;
-}
 
-export interface GeoServiceCallbacks {
-  onStart?: () => void;
-  onStop?: () => void;
-  onCoords?: (coords: Coords) => void;
-  onError?: (message: string) => void;
-  onPath?: (path: Coords[]) => void;
+  setParsedPath: (parsedPath?: Coords[]) => void;
+
+  // Internal: watchId reference
+  watchId: number | null;
 }

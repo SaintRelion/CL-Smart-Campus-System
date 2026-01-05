@@ -66,7 +66,8 @@ const InstructorRegistrationPage = () => {
         department: data.department,
         role: data.role,
       },
-      password: data.employeeID,
+      password: data.employeeId,
+      uniqueFields: ["employeeId"],
     });
   };
 

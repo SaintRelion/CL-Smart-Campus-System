@@ -2,7 +2,7 @@ import type { ClassSubject } from "@/models/class-subject";
 import { useAuth } from "@saintrelion/auth-lib";
 import { useDBOperationsLocked } from "@saintrelion/data-access-layer";
 import { useEffect, useState } from "react";
-import InstructorAttendance from "../attendance/InstructorAttendance";
+import InstructorAttendance from "../../components/attendance/InstructorAttendance";
 import {
   formatReadableTime,
   getCurrentDateTimeString,
