@@ -12,19 +12,33 @@ const LoginPage = () => {
 
   const loginWithCredentials = useLoginWithCredentials();
 
-  const handleLogin = async (data: Record<string, string>) => {
-    // Normally you'd call API here, then save returned user
-    console.log("Raw submission:", data);
+  async function djangoAuth(userId: string) {
+    await fetch("http://127.0.0.1:8000/api/auth/register/", {
+      method: "POST",
+      body: JSON.stringify({ username: userId, password: "default" }),
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+    // const jsonResult = await result.json();
+    // console.log(jsonResult);
 
+    await fetch("http://127.0.0.1:8000/api/auth/login/", {
+      method: "POST",
+      body: JSON.stringify({ username: userId, password: "default" }),
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const handleLogin = async (data: Record<string, string>) => {
     await loginWithCredentials.run(
       "employeeId",
       data.employeeId,
       data.employeeId,
       setUser,
-      (loggedInUser) => {
+      (user) => {
+        djangoAuth(user.id);
         navigate("/");
-
-        console.log(loggedInUser.createdAt);
       },
     );
   };

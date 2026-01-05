@@ -7,6 +7,9 @@ import { VitePWA } from "vite-plugin-pwa";
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    allowedHosts: ["sharri-nonspiny-unmendaciously.ngrok-free.dev"],
+  },
   plugins: [
     react(),
     tailwindcss(),

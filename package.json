@@ -1,5 +1,5 @@
 {
-  "name": "ojt_attendance",
+  "name": "instructor_attendance",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.1.0",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-checkbox": "^1.3.3",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -19,10 +20,10 @@
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tabs": "^1.1.13",
-    "@saintrelion/auth-lib": "^4.1.3",
+    "@saintrelion/auth-lib": "^4.2.8",
     "@saintrelion/cache": "^1.0.1",
-    "@saintrelion/data-access-layer": "^5.0.4",
-    "@saintrelion/forms": "^1.0.20",
+    "@saintrelion/data-access-layer": "^5.0.7",
+    "@saintrelion/forms": "^1.1.11",
     "@saintrelion/notifications": "^1.0.2",
     "@saintrelion/routers": "^2.0.0",
     "@saintrelion/time-functions": "^1.0.2",
@@ -49,7 +50,8 @@
     "shadcn": "^2.10.0",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.11",
-    "vite-plugin-pwa": "^1.1.0"
+    "vite-plugin-pwa": "^1.1.0",
+    "zustand": "^5.0.9"
   },
   "devDependencies": {
     "@eslint/js": "^9.30.1",

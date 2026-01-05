@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useDBOperationsLocked } from "@saintrelion/data-access-layer";
 import { formatReadableDate } from "@saintrelion/time-functions";
 import type { User } from "@/models/user";
@@ -11,8 +11,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { GeoViewer } from "../to-be-library/geo/geo-viewer";
+import { GeoViewer } from "../to-be-library/geo/GeoViewer";
 import { decodePath } from "../to-be-library/geo/lib/parser";
+import { useGeoStore } from "../to-be-library/geo/useGeoStore";
 
 export default function AdminAttendancePage() {
   // Instructor Select
@@ -29,9 +30,13 @@ export default function AdminAttendancePage() {
   const [selectedInstructor, setSelectedInstructor] = useState<User | null>(
     null,
   );
-  const [selectedDay, setSelectedDay] = useState<AttendanceLog | null>(null);
+  const [selectedAttendanceLog, setSelectedAttendanceLog] =
+    useState<AttendanceLog | null>(null);
 
-  const parsedPath = decodePath(selectedDay?.pathMovement);
+  const parsedPath = decodePath(selectedAttendanceLog?.pathMovement);
+  useEffect(() => {
+    useGeoStore.getState().setParsedPath(parsedPath);
+  }, [parsedPath]);
 
   // Filter logs for instructor
   const instructorLogs = useMemo(() => {
@@ -69,7 +74,7 @@ export default function AdminAttendancePage() {
               key={inst.id}
               onClick={() => {
                 setSelectedInstructor(inst);
-                setSelectedDay(null);
+                setSelectedAttendanceLog(null);
               }}
               className={`cursor-pointer rounded-lg border p-4 transition hover:bg-gray-50 ${
                 selectedInstructor?.id === inst.id
@@ -109,7 +114,7 @@ export default function AdminAttendancePage() {
                   {logs.map((log) => (
                     <div
                       key={log.id}
-                      onClick={() => setSelectedDay(log)}
+                      onClick={() => setSelectedAttendanceLog(log)}
                       className="flex cursor-pointer justify-between rounded border bg-white p-3 shadow-sm hover:bg-gray-50"
                     >
                       <span className="text-gray-700">
@@ -141,10 +146,10 @@ export default function AdminAttendancePage() {
       </div>
 
       {/* Attendance Map Viewer */}
-      {selectedDay && (
+      {selectedAttendanceLog && (
         <Dialog
-          open={!!selectedDay}
-          onOpenChange={(open) => !open && setSelectedDay(null)}
+          open={!!selectedAttendanceLog}
+          onOpenChange={(open) => !open && setSelectedAttendanceLog(null)}
         >
           <DialogContent>
             <DialogHeader>
@@ -156,13 +161,6 @@ export default function AdminAttendancePage() {
 
             <div className="h-[450px] w-full">
               <GeoViewer
-                serviceParameters={{
-                  externalCoords: parsedPath[0],
-                  externalPath: parsedPath.map(({ lat, lng }) => ({
-                    lat,
-                    lng,
-                  })),
-                }}
                 uiParameters={{
                   showDefaultControls: false,
                   showMap: true,
