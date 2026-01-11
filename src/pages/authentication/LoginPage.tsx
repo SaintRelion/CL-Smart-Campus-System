@@ -1,3 +1,5 @@
+import { API_URL } from "@/data-access-config";
+import { registerFingerprint } from "@/lib/fingerprint_registration";
 import { useAuth, useLoginWithCredentials } from "@saintrelion/auth-lib";
 import {
   RenderForm,
@@ -13,21 +15,37 @@ const LoginPage = () => {
   const loginWithCredentials = useLoginWithCredentials();
 
   async function djangoAuth(userId: string) {
-    await fetch("http://127.0.0.1:8000/api/auth/register/", {
+    await fetch(`${API_URL}api/auth/register/`, {
       method: "POST",
       body: JSON.stringify({ username: userId, password: "default" }),
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
-    // const jsonResult = await result.json();
-    // console.log(jsonResult);
 
-    await fetch("http://127.0.0.1:8000/api/auth/login/", {
+    const device = await fetch(`${API_URL}api/device/check/`, {
       method: "POST",
       body: JSON.stringify({ username: userId, password: "default" }),
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
+
+    const login = await fetch(`${API_URL}api/auth/token/`, {
+      method: "POST",
+      body: JSON.stringify({ username: userId, password: "default" }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    const { access } = await login.json();
+    localStorage.setItem("access", access);
+
+    const { registered } = await device.json();
+    if (!registered) registerFingerprint(userId);
+
+    navigate("/");
   }
 
   const handleLogin = async (data: Record<string, string>) => {
@@ -38,7 +56,6 @@ const LoginPage = () => {
       setUser,
       (user) => {
         djangoAuth(user.id);
-        navigate("/");
       },
     );
   };
