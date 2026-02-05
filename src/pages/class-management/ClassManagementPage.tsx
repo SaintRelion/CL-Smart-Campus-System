@@ -7,6 +7,7 @@ const ClassManagementPage = () => {
 
   const classManagementPages: Record<string, JSX.Element> = {
     instructor: <InstructorClassManagement />,
+    parttime: <InstructorClassManagement />,
   };
 
   return <div className="p-6">{classManagementPages[user.role ?? ""]}</div>;

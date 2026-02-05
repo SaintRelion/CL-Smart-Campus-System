@@ -17,10 +17,9 @@ import { useGeoStore } from "../to-be-library/geo/useGeoStore";
 
 export default function AdminAttendancePage() {
   // Instructor Select
-  const { useSelect: instructorSelect } = useDBOperationsLocked<User>("User");
-  const { data: instructors = [] } = instructorSelect({
-    firebaseOptions: { filterField: "role", value: "instructor" },
-  });
+  const { useSelect: usersSelect } = useDBOperationsLocked<User>("User");
+  const { data: users = [] } = usersSelect({});
+  const instructors = users.filter((u) => u.role != "admin");
 
   // Instructor Attendance Select
   const { useSelect: attendanceSelect } =
