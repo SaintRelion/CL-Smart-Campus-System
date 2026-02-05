@@ -25,13 +25,13 @@ registerGroupAppRoutes({
       path: "/",
       element: <DashboardPage />,
       label: "Dashboard",
-      allowedRoles: ["admin", "instructor"],
+      allowedRoles: ["admin", "instructor", "parttime"],
     },
     {
       path: "/classmanagement",
       element: <ClassManagementPage />,
       label: "Class Management",
-      allowedRoles: ["instructor"],
+      allowedRoles: ["instructor", "parttime"],
     },
     {
       path: "/instructorregistration",

@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useDBOperationsLocked } from "@saintrelion/data-access-layer";
+import { Trash2 } from "lucide-react";
 
 interface InstructorRow {
   id: string;
@@ -26,33 +27,78 @@ interface InstructorRow {
   name: string;
   email: string;
   department: string;
+  isEnabled: boolean;
 }
 
-const columns: ColumnDef<InstructorRow>[] = [
-  { header: "Employee ID", accessorKey: "employeeId" },
-  { header: "Name", accessorKey: "name" },
-  { header: "Email", accessorKey: "email" },
-  { header: "Department", accessorKey: "department" },
-  { header: "Role", accessorKey: "role" },
-];
-
 const InstructorRegistrationPage = () => {
-  const { useSelect: usersSelect } = useDBOperationsLocked<User>("User");
-  const { data: users = [] } = usersSelect({
-    firebaseOptions: {
-      filterField: "role",
-      value: "instructor",
-      realtime: true,
-    },
-  });
+  const columns: ColumnDef<InstructorRow>[] = [
+    { header: "Employee ID", accessorKey: "employeeId" },
+    { header: "Name", accessorKey: "name" },
+    { header: "Email", accessorKey: "email" },
+    { header: "Department", accessorKey: "department" },
+    { header: "Role", accessorKey: "role" },
 
-  const instructorRows: InstructorRow[] = users.map((user) => ({
+    {
+      header: "Status",
+      accessorKey: "isEnabled",
+      cell: ({ row }) => {
+        const user = row.original;
+        return (
+          <span
+            className={`rounded py-1 text-xs font-medium ${
+              user.isEnabled ? "text-green-700" : "text-red-400"
+            }`}
+          >
+            {user.isEnabled ? "Active" : "Inactive"}
+          </span>
+        );
+      },
+    },
+
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => {
+        const user = row.original;
+
+        return (
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              className="h-7 text-xs"
+              variant={user.isEnabled ? "secondary" : "default"}
+              onClick={() => toggleInstructorStatus(user.id, user.isEnabled)}
+            >
+              {user.isEnabled ? "Disable" : "Enable"}
+            </Button>
+
+            <Trash2
+              size={15}
+              className="cursor-pointer text-red-700"
+              onClick={() => deleteInstructor(user.id)}
+            />
+          </div>
+        );
+      },
+    },
+  ];
+
+  const {
+    useSelect: usersSelect,
+    useUpdate: userUpdate,
+    useDelete: userDelete,
+  } = useDBOperationsLocked<User>("User");
+  const { data: users = [] } = usersSelect({});
+  const filteredUsers = users.filter((u) => u.role != "admin");
+
+  const instructorRows: InstructorRow[] = filteredUsers.map((user) => ({
     id: user.id,
     employeeId: user.employeeId ?? "—",
     name: user.name ?? "—",
     email: user.email ?? "—",
     department: user.department ?? "—",
-    role: user.role,
+    role: UserRole[user.role],
+    isEnabled: user.isEnabled ?? true,
   }));
 
   const registerUser = useRegisterUser();
@@ -65,10 +111,29 @@ const InstructorRegistrationPage = () => {
         name: data.name,
         department: data.department,
         role: data.role,
+        isEnabled: true,
       },
       password: data.employeeId,
       uniqueFields: ["employeeId"],
     });
+  };
+
+  const toggleInstructorStatus = (id: string, status: boolean) => {
+    console.log("Toggle instructor status:", id);
+
+    userUpdate.run({
+      field: "id",
+      value: id,
+      updates: {
+        isEnabled: !status,
+      },
+    });
+  };
+
+  const deleteInstructor = (id: string) => {
+    console.log("Delete instructor:", id);
+
+    userDelete.run(id);
   };
 
   return (

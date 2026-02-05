@@ -9,6 +9,7 @@ const DashboardPage = () => {
   const dashboardPages: Record<string, JSX.Element> = {
     admin: <AdminDashboardPage />,
     instructor: <InstructorDashboardPage />,
+    parttime: <InstructorDashboardPage />,
   };
 
   return <div className="p-6">{dashboardPages[user.role ?? ""]}</div>;

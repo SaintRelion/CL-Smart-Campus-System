@@ -52,7 +52,7 @@ const InstructorDashboardPage = () => {
           (classTime.getTime() - todayDateTime.getTime()) / (1000 * 60);
         if (diffMinutes > 0 && diffMinutes <= 15) {
           setAlert(
-            `Your ${formatReadableTime(cls.time)} class "${cls.title}" starts in ${Math.round(diffMinutes)} minutes`,
+            `Your ${formatReadableTime(cls.time)} class "${cls.title}" starts in ${Math.round(diffMinutes)} minute/s`,
           );
         }
       }
