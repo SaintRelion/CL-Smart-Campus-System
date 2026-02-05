@@ -5,5 +5,4 @@ export interface ClassSubject {
   days: string[];
   time: string;
   room?: string;
-  students: string[];
 }

@@ -172,9 +172,9 @@ export default function InstructorAttendance() {
             ? formatReadableDateTime(todayAttendance.timeOut)
             : "—"}
         </p>
-        <p>
+        {/* <p>
           <strong>Path Points Recorded:</strong> {pathMovement.length}
-        </p>
+        </p> */}
       </div>
     </div>
   );

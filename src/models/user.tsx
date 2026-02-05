@@ -8,4 +8,5 @@ export interface User {
   email: string;
   department: Department;
   role: UserRole;
+  isEnabled: boolean;
 }
