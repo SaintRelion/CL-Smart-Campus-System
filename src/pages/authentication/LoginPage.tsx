@@ -64,7 +64,7 @@ const LoginPage = () => {
     <div className="h-screen w-full bg-blue-100">
       <div className="flex h-full flex-col items-center justify-center space-y-4">
         <h1 className="text-center text-2xl font-bold">Login</h1>
-        <RenderForm wrapperClass="flex flex-col items-center space-y-2">
+        <RenderForm wrapperClassName="flex flex-col items-center space-y-2">
           <RenderFormField
             field={{
               type: "text",

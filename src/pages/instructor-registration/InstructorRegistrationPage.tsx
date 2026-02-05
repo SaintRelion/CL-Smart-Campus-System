@@ -154,7 +154,7 @@ const InstructorRegistrationPage = () => {
                 Fill out the form to register an instructor.
               </DialogDescription>
             </DialogHeader>
-            <RenderForm wrapperClass="space-y-6">
+            <RenderForm wrapperClassName="space-y-6">
               <RenderFormField
                 field={{
                   label: "Employee ID",

@@ -62,7 +62,7 @@ const InstructorClassManagement = () => {
                 Fill in the details to create your class.
               </DialogDescription>
             </DialogHeader>
-            <RenderForm wrapperClass="space-y-5">
+            <RenderForm wrapperClassName="space-y-5">
               <RenderFormField
                 field={{
                   label: "Subject Title",
