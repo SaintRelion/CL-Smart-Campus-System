@@ -20,6 +20,8 @@ mockRegister<ClassSubject>("ClassSubject", [
     days: ["Monday", "Wednesday"],
     time: "08:00",
     room: "Room A1",
+    semester: "1st",
+    year: "2026",
   },
   {
     id: "2",
@@ -28,5 +30,7 @@ mockRegister<ClassSubject>("ClassSubject", [
     days: ["Tuesday", "Thursday"],
     time: "10:00",
     room: "Room B2",
+    semester: "1st",
+    year: "2026",
   },
 ]);
