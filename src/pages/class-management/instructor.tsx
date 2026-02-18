@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { RenderDataCore } from "@saintrelion/ui";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 const days = [
   "Monday",
@@ -36,6 +37,24 @@ const InstructorClassManagement = () => {
   const { data: classes = [] } = classesSelect({
     firebaseOptions: { filterField: "employeeId", value: user.employeeId },
     mockOptions: { filterFn: (c) => c.employeeId === user.employeeId },
+  });
+
+  const currentYear = new Date().getFullYear();
+
+  const yearOptions = Array.from({ length: 5 }, (_, i) =>
+    String(currentYear - i),
+  );
+
+  const [selectedSemester, setSelectedSemester] = useState("all");
+  const [selectedYear, setSelectedYear] = useState(currentYear.toString());
+
+  const filteredClasses = classes.filter((cls) => {
+    const matchesSemester =
+      selectedSemester === "all" || cls.semester === selectedSemester;
+
+    const matchesYear = selectedYear === "all" || cls.year === selectedYear;
+
+    return matchesSemester && matchesYear;
   });
 
   const handleAddClass = (data: Record<string, string>) => {
@@ -63,6 +82,24 @@ const InstructorClassManagement = () => {
               </DialogDescription>
             </DialogHeader>
             <RenderForm wrapperClassName="space-y-5">
+              <div className="flex justify-around">
+                <RenderFormField
+                  field={{
+                    label: "Semester",
+                    type: "select",
+                    name: "semester",
+                    options: ["1st", "2nd"],
+                  }}
+                />{" "}
+                <RenderFormField
+                  field={{
+                    label: "Year",
+                    type: "select",
+                    name: "year",
+                    options: yearOptions,
+                  }}
+                />
+              </div>
               <RenderFormField
                 field={{
                   label: "Subject Title",
@@ -96,21 +133,50 @@ const InstructorClassManagement = () => {
 
       {/* CLASS LIST */}
       <div className="">
-        <h1>My Classes</h1>
-        {classes.length == 0 ? (
+        <div className="flex justify-between">
+          <h1>My Classes</h1>
+          <div className="mb-4 flex gap-4">
+            <select
+              value={selectedSemester}
+              onChange={(e) => setSelectedSemester(e.target.value)}
+              className="rounded border px-3 py-1 text-sm"
+            >
+              <option value="all">All Semesters</option>
+              <option value="1st">1st</option>
+              <option value="2nd">2nd</option>
+            </select>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="rounded border px-3 py-1 text-sm"
+            >
+              <option value="all">All Years</option>
+              {yearOptions.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        {filteredClasses.length == 0 ? (
           <div className="text-gray-500 italic">No classes</div>
         ) : (
           <RenderDataCore
             ui={{ content: { wrapperClassName: "flex flex-col space-y-4" } }}
-            data={classes}
+            data={filteredClasses}
             renderItem={(item) => (
               <div className="rounded-md p-4 shadow-xl">
-                <div className="bg-transparent font-medium text-blue-600 hover:bg-transparent">
-                  {item.title}
-                </div>
+                <div className="font-medium text-blue-600">{item.title}</div>
+
                 <p className="text-sm text-gray-600">
                   {formatReadableTime(item.time)} • {item.room || "No Room"}
                 </p>
+
+                <p className="text-xs text-gray-500">
+                  {item.semester} Semester • {item.year}
+                </p>
+
                 <p className="text-xs text-gray-500">
                   Days: {item.days.join(", ")}
                 </p>
