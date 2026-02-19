@@ -18,6 +18,7 @@ import {
 import { RenderDataCore } from "@saintrelion/ui";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { Trash2 } from "lucide-react";
 
 const days = [
   "Monday",
@@ -32,8 +33,11 @@ const InstructorClassManagement = () => {
   const { user } = useAuth();
 
   // Classes Select, Insert, Update
-  const { useSelect: classesSelect, useInsert: classesInsert } =
-    useDBOperationsLocked<ClassSubject>("ClassSubject");
+  const {
+    useSelect: classesSelect,
+    useInsert: classesInsert,
+    useDelete: classesDelete,
+  } = useDBOperationsLocked<ClassSubject>("ClassSubject");
   const { data: classes = [] } = classesSelect({
     firebaseOptions: { filterField: "employeeId", value: user.employeeId },
     mockOptions: { filterFn: (c) => c.employeeId === user.employeeId },
@@ -166,20 +170,28 @@ const InstructorClassManagement = () => {
             ui={{ content: { wrapperClassName: "flex flex-col space-y-4" } }}
             data={filteredClasses}
             renderItem={(item) => (
-              <div className="rounded-md p-4 shadow-xl">
-                <div className="font-medium text-blue-600">{item.title}</div>
+              <div className="flex items-center justify-between rounded-md p-4 shadow-xl">
+                <div className="">
+                  <div className="font-medium text-blue-600">{item.title}</div>
 
-                <p className="text-sm text-gray-600">
-                  {formatReadableTime(item.time)} • {item.room || "No Room"}
-                </p>
+                  <p className="text-sm text-gray-600">
+                    {formatReadableTime(item.time)} • {item.room || "No Room"}
+                  </p>
 
-                <p className="text-xs text-gray-500">
-                  {item.semester} Semester • {item.year}
-                </p>
+                  <p className="text-xs text-gray-500">
+                    {item.semester} Semester • {item.year}
+                  </p>
 
-                <p className="text-xs text-gray-500">
-                  Days: {item.days.join(", ")}
-                </p>
+                  <p className="text-xs text-gray-500">
+                    Days: {item.days.join(", ")}
+                  </p>
+                </div>
+                <Trash2
+                  className="h-4 w-4 text-red-700"
+                  onClick={() => {
+                    if (!classesDelete.isLocked) classesDelete.run(item.id);
+                  }}
+                />
               </div>
             )}
           />
