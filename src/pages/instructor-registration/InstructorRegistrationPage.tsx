@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useDBOperationsLocked } from "@saintrelion/data-access-layer";
 import { Trash2 } from "lucide-react";
+import { API_URL } from "@/data-access-config";
 
 interface InstructorRow {
   id: string;
@@ -103,8 +104,8 @@ const InstructorRegistrationPage = () => {
 
   const registerUser = useRegisterUser();
 
-  const handleRegister = (data: Record<string, string>) => {
-    registerUser.run({
+  const handleRegister = async (data: Record<string, string>) => {
+    const user = await registerUser.run({
       info: {
         email: data.email,
         employeeId: data.employeeId,
@@ -116,6 +117,21 @@ const InstructorRegistrationPage = () => {
       password: data.employeeId,
       uniqueFields: ["employeeId"],
     });
+
+    if (user) {
+      await fetch(`${API_URL}api/auth/register/`, {
+        method: "POST",
+        body: JSON.stringify({
+          username: user.id,
+          employeeId: data.employeeId,
+          email: data.email,
+          password: "default",
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
   };
 
   const toggleInstructorStatus = (id: string, status: boolean) => {

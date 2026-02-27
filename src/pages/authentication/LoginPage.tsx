@@ -1,63 +1,52 @@
 import { API_URL } from "@/data-access-config";
-import { registerFingerprint } from "@/lib/fingerprint_registration";
 import { useAuth, useLoginWithCredentials } from "@saintrelion/auth-lib";
 import {
   RenderForm,
   RenderFormButton,
   RenderFormField,
 } from "@saintrelion/forms";
-import { useNavigate } from "react-router-dom";
+import { toast } from "@saintrelion/notifications";
+import { useState } from "react";
 
 const LoginPage = () => {
   const { setUser } = useAuth();
-  const navigate = useNavigate();
 
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const loginWithCredentials = useLoginWithCredentials();
 
-  async function djangoAuth(userId: string) {
-    await fetch(`${API_URL}api/auth/register/`, {
-      method: "POST",
-      body: JSON.stringify({ username: userId, password: "default" }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    const device = await fetch(`${API_URL}api/device/check/`, {
-      method: "POST",
-      body: JSON.stringify({ username: userId, password: "default" }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    const login = await fetch(`${API_URL}api/auth/token/`, {
-      method: "POST",
-      body: JSON.stringify({ username: userId, password: "default" }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    const { access } = await login.json();
-    localStorage.setItem("access", access);
-
-    const { registered } = await device.json();
-    if (!registered) registerFingerprint(userId);
-
-    navigate("/");
-  }
-
   const handleLogin = async (data: Record<string, string>) => {
-    await loginWithCredentials.run(
-      "employeeId",
-      data.employeeId,
-      data.employeeId,
-      setUser,
-      (user) => {
-        djangoAuth(user.id);
-      },
-    );
+    try {
+      setIsLoggingIn(true);
+      const login = await fetch(`${API_URL}api/auth/token/`, {
+        method: "POST",
+        body: JSON.stringify({
+          username: data.employeeId,
+          password: "default",
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const loginRes = await login.json();
+      if (!loginRes.access) {
+        toast.warning("No id found");
+        return;
+      }
+
+      localStorage.setItem("access", loginRes.access);
+
+      await loginWithCredentials.run(
+        "employeeId",
+        data.employeeId,
+        data.employeeId,
+        setUser,
+      );
+
+      setIsLoggingIn(false);
+    } catch {
+      setIsLoggingIn(false);
+    }
   };
 
   return (
@@ -77,7 +66,7 @@ const LoginPage = () => {
           <RenderFormButton
             buttonClassName="bg-blue-400 hover:bg-blue-500"
             buttonLabel="Login"
-            isDisabled={loginWithCredentials.isLocked}
+            isDisabled={isLoggingIn}
             onSubmit={handleLogin}
           />
         </RenderForm>

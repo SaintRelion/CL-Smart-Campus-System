@@ -16,7 +16,6 @@ import {
 } from "../../pages/to-be-library/geo/lib/parser";
 import { GeoViewer } from "../../pages/to-be-library/geo/GeoViewer";
 import { useGeoStore } from "@/pages/to-be-library/geo/useGeoStore";
-import { authenticateFingerprint } from "@/lib/fingerprint_authentication";
 
 export default function InstructorAttendance() {
   const { user } = useAuth();
@@ -64,74 +63,62 @@ export default function InstructorAttendance() {
   }, [todayAttendance]);
 
   const handleAttendanceToggle = async () => {
-    // const result = await registerFingerprint(user.id);
-    // console.log(result);
+    const logId = todayAttendance?.id;
+    if (!isCheckedIn) {
+      // ---- CHECK IN ----
+      const now = getCurrentDateTimeString();
+      setIsCheckedIn(true);
 
-    const result = await authenticateFingerprint(user.id);
-    if (result.status) {
-      // setIsCheckedIn(true);
-      console.log(result.status);
-
-      const logId = todayAttendance?.id;
-      if (!isCheckedIn) {
-        // ---- CHECK IN ----
-        const now = getCurrentDateTimeString();
-        setIsCheckedIn(true);
-
-        // if no record for today, create one
-        if (!logId) {
-          attendanceInsert.run({
-            employeeId: user.employeeId,
-            timeIn: now,
-            pathMovement: encodePath(pathMovement),
-          });
-        }
-
-        // Start periodic path capture every 5 minutes
-        // intervalRef.current = setInterval(
-        //   () => {
-        //     if (pathMovement.length > 0) {
-        //       const last = pathMovement[pathMovement.length - 1];
-
-        //       attendanceUpdate.mutate({
-        //         field: "id",
-        //         value: logId!,
-        //         updates: {
-        //           pathMovement: appendPath(todayAttendance?.pathMovement, last),
-        //         },
-        //       });
-        //     }
-        //   },
-        //   5 * 60 * 1000,
-        // ); // 5 minutes
-      } else {
-        // ---- CHECK OUT ----
-        const now = getCurrentDateTimeString();
-        setIsCheckedIn(false);
-
-        // Stop tracking timer
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current);
-          intervalRef.current = null;
-        }
-
-        // Save final position
-        if (pathMovement.length > 0) {
-          const last = pathMovement[pathMovement.length - 1];
-
-          attendanceUpdate.run({
-            field: "id",
-            value: logId!,
-            updates: {
-              timeOut: now,
-              pathMovement: appendPath(todayAttendance?.pathMovement, last),
-            },
-          });
-        }
+      // if no record for today, create one
+      if (!logId) {
+        attendanceInsert.run({
+          employeeId: user.employeeId,
+          timeIn: now,
+          pathMovement: encodePath(pathMovement),
+        });
       }
+
+      // Start periodic path capture every 5 minutes
+      // intervalRef.current = setInterval(
+      //   () => {
+      //     if (pathMovement.length > 0) {
+      //       const last = pathMovement[pathMovement.length - 1];
+
+      //       attendanceUpdate.mutate({
+      //         field: "id",
+      //         value: logId!,
+      //         updates: {
+      //           pathMovement: appendPath(todayAttendance?.pathMovement, last),
+      //         },
+      //       });
+      //     }
+      //   },
+      //   5 * 60 * 1000,
+      // ); // 5 minutes
     } else {
-      alert("Fingerprint failed");
-      console.log(result.error || "Fingerprint failed");
+      // ---- CHECK OUT ----
+      const now = getCurrentDateTimeString();
+      setIsCheckedIn(false);
+
+      // Stop tracking timer
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+
+      // Save final position
+      if (pathMovement.length > 0) {
+        const last = pathMovement[pathMovement.length - 1];
+
+        attendanceUpdate.run({
+          field: "id",
+          value: logId!,
+          updates: {
+            timeOut: now,
+            pathMovement: appendPath(todayAttendance?.pathMovement, last),
+          },
+        });
+      }
     }
   };
 
