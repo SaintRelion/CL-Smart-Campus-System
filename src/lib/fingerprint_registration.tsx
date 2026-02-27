@@ -45,7 +45,6 @@ export async function registerFingerprint(userId: string) {
   const beginRes = await fetch(`${API_URL}api/device/register/begin/`, {
     method: "POST",
     body: JSON.stringify({ username: userId }),
-    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -78,7 +77,6 @@ export async function registerFingerprint(userId: string) {
   const finishRes = await fetch(`${API_URL}api/device/register/finish/`, {
     method: "POST",
     body: JSON.stringify({ ...attestationResponse, username: userId }),
-    credentials: "include",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,

@@ -46,7 +46,6 @@ export async function authenticateFingerprint(userId: string) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    credentials: "include",
   });
   const options = await optionsRes.json();
 
@@ -77,7 +76,6 @@ export async function authenticateFingerprint(userId: string) {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    credentials: "include",
   });
 
   return await verifyRes.json();

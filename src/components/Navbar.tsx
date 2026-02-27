@@ -1,4 +1,3 @@
-import { registerFingerprint } from "@/lib/fingerprint_registration";
 import { logout, useAuth } from "@saintrelion/auth-lib";
 // import UserMenu from "./UserMenu";
 import { renderNavItems } from "@saintrelion/routers";
@@ -8,14 +7,7 @@ const Navbar = () => {
 
   return (
     <nav className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-6 py-3 shadow-sm">
-      <div
-        onClick={() => {
-          registerFingerprint(user.id);
-        }}
-        className="text-primary text-xl font-semibold"
-      >
-        ClassTrack
-      </div>
+      <div className="text-primary text-xl font-semibold">ClassTrack</div>
       <div className="flex items-center gap-4">
         {renderNavItems({
           role: user.role ?? "",
@@ -27,7 +19,7 @@ const Navbar = () => {
         {/* <UserMenu /> */}
         <button
           onClick={() => {
-            logout(() => {
+            logout(async () => {
               window.location.href = "/login";
             });
           }}
