@@ -4,7 +4,7 @@ import {
   setGlobalMode,
 } from "@saintrelion/data-access-layer";
 
-export const API_URL = "https://4g0cpcf6-8000.asse.devtunnels.ms/";
+export const API_URL = "http://awo00c4k4owwwoowogc44oc0.76.13.217.76.sslip.io/";
 
 setAuthLibClientAppName("smartcampus");
 setDataAccessLayerClientAppName("smartcampus");
