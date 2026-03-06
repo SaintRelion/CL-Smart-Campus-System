@@ -8,7 +8,6 @@ import { registerFingerprint } from "@/lib/fingerprint_registration";
 import { authenticateFingerprint } from "@/lib/fingerprint_authentication";
 import { Button } from "@/components/ui/button";
 import { toast } from "@saintrelion/notifications";
-import InstructorRegistrationPage from "@/pages/instructor-registration/InstructorRegistrationPage";
 
 const RootLayout = () => {
   const { user } = useAuth();
@@ -107,8 +106,6 @@ const RootLayout = () => {
       toast.error("OTP rejected");
     }
   };
-
-  // return <InstructorRegistrationPage />;
 
   if (isPathPublic != "") {
     return <Outlet />;

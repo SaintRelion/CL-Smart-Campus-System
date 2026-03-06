@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Clock } from "lucide-react";
+import { formatReadableTime } from "@saintrelion/time-functions";
 
 export function LiveClock({
   onTimeChanged,
@@ -29,7 +30,7 @@ export function LiveClock({
         <Clock className="text-muted-foreground h-4 w-4" />
         <p className="text-muted-foreground text-sm">Current Time</p>
       </div>
-      <p className="text-3xl font-bold">{parseYYYYMMDD(currentTime)}</p>
+      <p className="text-3xl font-bold">{formatReadableTime(currentTime)}</p>
     </div>
   );
 }
