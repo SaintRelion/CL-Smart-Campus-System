@@ -8,6 +8,7 @@ import { registerFingerprint } from "@/lib/fingerprint_registration";
 import { authenticateFingerprint } from "@/lib/fingerprint_authentication";
 import { Button } from "@/components/ui/button";
 import { toast } from "@saintrelion/notifications";
+import InstructorRegistrationPage from "@/pages/instructor-registration/InstructorRegistrationPage";
 
 const RootLayout = () => {
   const { user } = useAuth();
@@ -73,7 +74,7 @@ const RootLayout = () => {
       const response = await fetch(`${API_URL}api/otp/send/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: user.email, type: "email" }),
+        body: JSON.stringify({ email: user.email, otp_type: "email" }),
       });
 
       const data = await response.json();
@@ -106,6 +107,8 @@ const RootLayout = () => {
       toast.error("OTP rejected");
     }
   };
+
+  // return <InstructorRegistrationPage />;
 
   if (isPathPublic != "") {
     return <Outlet />;

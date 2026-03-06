@@ -4,7 +4,7 @@ import {
   setGlobalMode,
 } from "@saintrelion/data-access-layer";
 
-export const API_URL = "https://back.opsularity.space/";
+export const API_URL = "https://4g0cpcf6-8000.asse.devtunnels.ms/";
 
 setAuthLibClientAppName("smartcampus");
 setDataAccessLayerClientAppName("smartcampus");
