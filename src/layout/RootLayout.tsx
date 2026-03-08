@@ -96,10 +96,6 @@ const RootLayout = () => {
         otp_id: otpId,
         code: otpInput,
       });
-
-      if (data.success) {
-        setOtpSending(false);
-      }
     } catch (err) {
       console.error("OTP verify failed:", err);
       toast.error("OTP rejected");
@@ -107,9 +103,17 @@ const RootLayout = () => {
       setOtpSending(false);
     }
 
-    if (data.success) {
-      await registerFingerprint(user.id);
-      await authenticateDevice();
+    try {
+      if (data.success) {
+        await registerFingerprint(user.id);
+        logout(async () => {
+          window.location.href = "/login";
+        });
+      }
+
+      setOtpSending(false);
+    } catch {
+      setOtpSending(false);
     }
   };
 
