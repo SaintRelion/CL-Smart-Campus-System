@@ -8,6 +8,7 @@ import { registerFingerprint } from "@/lib/fingerprint_registration";
 import { authenticateFingerprint } from "@/lib/fingerprint_authentication";
 import { Button } from "@/components/ui/button";
 import { toast } from "@saintrelion/notifications";
+import { apiRequest } from "@saintrelion/api-functions";
 
 const RootLayout = () => {
   const { user } = useAuth();
@@ -30,13 +31,10 @@ const RootLayout = () => {
 
     const checkAccountSecurity = async () => {
       try {
-        const res = await fetch(`${API_URL}api/device/check/`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username: user.id }),
+        const data = await apiRequest(`${API_URL}api/device/check/`, {
+          username: user.id,
         });
 
-        const data = await res.json();
         setAccountSecured(data.registered);
 
         if (data.registered) authenticateDevice();
@@ -70,40 +68,48 @@ const RootLayout = () => {
     try {
       setOtpSending(true);
 
-      const response = await fetch(`${API_URL}api/otp/send/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: user.email, otp_type: "email" }),
+      const data = await apiRequest(`${API_URL}api/otp/send/`, {
+        email: user.email,
+        password: "default",
+        otp_type: "email",
       });
 
-      const data = await response.json();
       if (data.otp_id) {
         alert("OTP sent. Verify to continue.");
         setOtpId(data.otp_id);
         setShowOtpInput(true);
+
+        setOtpSending(false);
       }
     } catch (err) {
       console.error("OTP send failed:", err);
+
+      setOtpSending(false);
     }
   };
 
   const handleVerifyOTP = async () => {
+    let data;
     try {
-      const res = await fetch(`${API_URL}api/otp/verify/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ otp_id: otpId, code: otpInput }),
+      setOtpSending(true);
+      data = await apiRequest(`${API_URL}api/otp/verify/`, {
+        otp_id: otpId,
+        code: otpInput,
       });
 
-      const data = await res.json();
-
       if (data.success) {
-        await registerFingerprint(user.id);
-        await authenticateDevice();
+        setOtpSending(false);
       }
     } catch (err) {
       console.error("OTP verify failed:", err);
       toast.error("OTP rejected");
+
+      setOtpSending(false);
+    }
+
+    if (data.success) {
+      await registerFingerprint(user.id);
+      await authenticateDevice();
     }
   };
 
@@ -200,7 +206,9 @@ const RootLayout = () => {
               onChange={(e) => setOtpInput(e.target.value)}
               className="border p-2"
             />
-            <Button onClick={() => handleVerifyOTP()}>Verify OTP</Button>
+            <Button onClick={() => handleVerifyOTP()} disabled={otpSending}>
+              Verify OTP
+            </Button>
           </>
         )}
       </div>
