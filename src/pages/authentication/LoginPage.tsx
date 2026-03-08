@@ -31,6 +31,7 @@ const LoginPage = () => {
       const loginRes = await login.json();
       if (!loginRes.access) {
         toast.warning("No id found");
+        setIsLoggingIn(false);
         return;
       }
 
@@ -47,8 +48,6 @@ const LoginPage = () => {
     } catch {
       setIsLoggingIn(false);
     }
-
-    setIsLoggingIn(false);
   };
 
   return (
