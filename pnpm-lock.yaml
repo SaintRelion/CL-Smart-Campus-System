@@ -38,6 +38,9 @@ importers:
       '@radix-ui/react-tabs':
         specifier: ^1.1.13
         version: 1.1.13(@types/react-dom@19.2.3(@types/react@19.2.11))(@types/react@19.2.11)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@saintrelion/api-functions':
+        specifier: ^1.0.0
+        version: 1.0.0
       '@saintrelion/auth-lib':
         specifier: ^4.2.8
         version: 4.2.8(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -1891,6 +1894,9 @@ packages:
     resolution: {integrity: sha512-mxRFDdHIWRxg3UfIIAwCm6NzvxG0jDX/wBN6KsQFTvKFqqg9vTrWUE68qEjHt19A5wwx5X5aUi2zuZT7YR0jrA==}
     cpu: [x64]
     os: [win32]
+
+  '@saintrelion/api-functions@1.0.0':
+    resolution: {integrity: sha512-gVfN2nA9Nt2CPZTGpK13uAyH/HHCUBxiXArEKnLtEegWrMZcCAnlO6+/DfrwXhSceChhf1HD0iFsrO+Db41K1A==, tarball: https://npm.pkg.github.com/download/@saintrelion/api-functions/1.0.0/7bba6e31f54010f9648740c6e1d749da48b431c1}
 
   '@saintrelion/auth-lib@4.2.8':
     resolution: {integrity: sha512-yA0eAx4UkVEz54saMCyJCedLOTTWLud0NzZ5p/ac6j/x/V6p4wSxNLYlGjYNYHGgHBNqkgu1tipBU+Fvo+9yAw==, tarball: https://npm.pkg.github.com/download/@saintrelion/auth-lib/4.2.8/e4c170693b57d00c435957cef541f9a06c144271}
@@ -6266,6 +6272,11 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.57.1':
     optional: true
+
+  '@saintrelion/api-functions@1.0.0':
+    dependencies:
+      '@saintrelion/cache': 1.0.1
+      '@saintrelion/notifications': 1.0.2
 
   '@saintrelion/auth-lib@4.2.8(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
     dependencies:

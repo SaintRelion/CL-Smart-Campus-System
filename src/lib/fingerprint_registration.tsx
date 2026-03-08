@@ -1,4 +1,5 @@
 import { API_URL } from "@/data-access-config";
+import { apiRequest } from "@saintrelion/api-functions";
 
 function base64urlToBuffer(base64url: string): ArrayBuffer {
   const padding = "=".repeat((4 - (base64url.length % 4)) % 4);
@@ -42,15 +43,16 @@ function prepareRegistrationOptions(options: any) {
 
 export async function registerFingerprint(userId: string) {
   const token = localStorage.getItem("access");
-  const beginRes = await fetch(`${API_URL}api/device/register/begin/`, {
-    method: "POST",
-    body: JSON.stringify({ username: userId }),
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const options = await apiRequest(
+    `${API_URL}api/device/register/begin/`,
+    { username: userId },
+    {
+      auth: false,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
-  const options = await beginRes.json();
+  );
   console.log(options);
 
   const publicKey = prepareRegistrationOptions(options);
@@ -74,14 +76,16 @@ export async function registerFingerprint(userId: string) {
   };
 
   console.log(attestationResponse);
-  const finishRes = await fetch(`${API_URL}api/device/register/finish/`, {
-    method: "POST",
-    body: JSON.stringify({ ...attestationResponse, username: userId }),
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const finishRes = await apiRequest(
+    `${API_URL}api/device/register/finish/`,
+    { ...attestationResponse, username: userId },
+    {
+      auth: false,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
 
   return await finishRes.json();
 }

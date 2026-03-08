@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { useDBOperationsLocked } from "@saintrelion/data-access-layer";
 import { Trash2 } from "lucide-react";
 import { API_URL } from "@/data-access-config";
+import { apiRequest } from "@saintrelion/api-functions";
 
 interface InstructorRow {
   id: string;
@@ -119,17 +120,11 @@ const InstructorRegistrationPage = () => {
     });
 
     if (user) {
-      await fetch(`${API_URL}api/auth/register/`, {
-        method: "POST",
-        body: JSON.stringify({
-          username: user.id,
-          employeeId: data.employeeId,
-          email: data.email,
-          password: "default",
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
+      await apiRequest(`${API_URL}api/auth/register/`, {
+        username: user.id,
+        employeeId: data.employeeId,
+        email: data.email,
+        password: "default",
       });
     }
   };

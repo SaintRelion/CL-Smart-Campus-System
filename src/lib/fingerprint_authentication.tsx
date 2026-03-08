@@ -1,4 +1,5 @@
 import { API_URL } from "@/data-access-config";
+import { apiRequest } from "@saintrelion/api-functions";
 
 function base64urlToBuffer(base64url: string): ArrayBuffer {
   const padding = "=".repeat((4 - (base64url.length % 4)) % 4);
@@ -38,16 +39,18 @@ function prepareAuthenticationOptions(options: any) {
 
 export async function authenticateFingerprint(userId: string) {
   const token = localStorage.getItem("access");
-
-  const optionsRes = await fetch(`${API_URL}api/device/login/begin/`, {
-    method: "POST",
-    body: JSON.stringify({ username: userId }),
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const options = await apiRequest(
+    `${API_URL}api/device/login/begin/`,
+    {
+      username: userId,
     },
-  });
-  const options = await optionsRes.json();
+    {
+      auth: false,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
 
   const publicKey = prepareAuthenticationOptions(options);
   const assertion = (await navigator.credentials.get({
@@ -69,14 +72,16 @@ export async function authenticateFingerprint(userId: string) {
   };
 
   console.log(authResponse);
-  const verifyRes = await fetch(`${API_URL}api/device/login/finish/`, {
-    method: "POST",
-    body: JSON.stringify(authResponse),
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  const verifyRes = await apiRequest(
+    `${API_URL}api/device/login/finish/`,
+    authResponse,
+    {
+      auth: false,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     },
-  });
+  );
 
   return await verifyRes.json();
 }

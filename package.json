@@ -20,6 +20,7 @@
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tabs": "^1.1.13",
+    "@saintrelion/api-functions": "^1.0.0",
     "@saintrelion/auth-lib": "^4.2.8",
     "@saintrelion/cache": "^1.0.1",
     "@saintrelion/data-access-layer": "^5.0.9",

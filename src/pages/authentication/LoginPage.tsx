@@ -1,4 +1,5 @@
 import { API_URL } from "@/data-access-config";
+import { apiRequest } from "@saintrelion/api-functions";
 import { useAuth, useLoginWithCredentials } from "@saintrelion/auth-lib";
 import {
   RenderForm,
@@ -17,25 +18,18 @@ const LoginPage = () => {
   const handleLogin = async (data: Record<string, string>) => {
     try {
       setIsLoggingIn(true);
-      const login = await fetch(`${API_URL}api/auth/token/`, {
-        method: "POST",
-        body: JSON.stringify({
-          username: data.employeeId,
-          password: "default",
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
+      const login = await apiRequest(`${API_URL}api/auth/token/`, {
+        username: data.employeeId,
+        password: "default",
       });
 
-      const loginRes = await login.json();
-      if (!loginRes.access) {
+      if (!login.access) {
         toast.warning("No id found");
         setIsLoggingIn(false);
         return;
       }
 
-      localStorage.setItem("access", loginRes.access);
+      localStorage.setItem("access", login.access);
 
       await loginWithCredentials.run(
         "employeeId",
