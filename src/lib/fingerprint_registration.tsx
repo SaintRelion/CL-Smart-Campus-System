@@ -87,5 +87,5 @@ export async function registerFingerprint(userId: string) {
     },
   );
 
-  return await finishRes.json();
+  return finishRes;
 }

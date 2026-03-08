@@ -83,5 +83,5 @@ export async function authenticateFingerprint(userId: string) {
     },
   );
 
-  return await verifyRes.json();
+  return verifyRes;
 }
