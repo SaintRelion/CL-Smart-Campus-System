@@ -47,6 +47,8 @@ const LoginPage = () => {
     } catch {
       setIsLoggingIn(false);
     }
+
+    setIsLoggingIn(false);
   };
 
   return (
