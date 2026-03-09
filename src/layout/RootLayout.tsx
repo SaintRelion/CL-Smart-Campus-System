@@ -31,9 +31,13 @@ const RootLayout = () => {
 
     const checkAccountSecurity = async () => {
       try {
-        const data = await apiRequest(`${API_URL}api/device/check/`, {
-          username: user.id,
-        });
+        const data = await apiRequest(
+          `${API_URL}api/device/check/`,
+          {
+            username: user.id,
+          },
+          { auth: false },
+        );
 
         setAccountSecured(data.registered);
 
@@ -67,12 +71,17 @@ const RootLayout = () => {
   const handleSendOTP = async () => {
     try {
       setOtpSending(true);
+      console.log(user);
 
-      const data = await apiRequest(`${API_URL}api/otp/send/`, {
-        email: user.email,
-        password: "default",
-        otp_type: "email",
-      });
+      const data = await apiRequest(
+        `${API_URL}api/otp/send/`,
+        {
+          email: user.email,
+          password: "default",
+          otp_type: "email",
+        },
+        { auth: false },
+      );
 
       if (data.otp_id) {
         alert("OTP sent. Verify to continue.");
@@ -89,22 +98,25 @@ const RootLayout = () => {
   };
 
   const handleVerifyOTP = async () => {
-    let data;
+    let data = null;
     try {
       setOtpSending(true);
-      data = await apiRequest(`${API_URL}api/otp/verify/`, {
-        otp_id: otpId,
-        code: otpInput,
-      });
+      data = await apiRequest(
+        `${API_URL}api/otp/verify/`,
+        {
+          otp_id: otpId,
+          code: otpInput,
+        },
+        { auth: false },
+      );
+      console.log(data);
     } catch (err) {
       console.error("OTP verify failed:", err);
-      toast.error("OTP rejected");
-
       setOtpSending(false);
     }
 
     try {
-      if (data.success) {
+      if (data != null && data.success) {
         await registerFingerprint(user.id);
         logout(async () => {
           window.location.href = "/login";
@@ -113,6 +125,7 @@ const RootLayout = () => {
 
       setOtpSending(false);
     } catch {
+      toast.error("Failed to register fingerprint");
       setOtpSending(false);
     }
   };
