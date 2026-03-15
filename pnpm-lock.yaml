@@ -51,8 +51,8 @@ importers:
         specifier: ^5.0.9
         version: 5.0.9(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@saintrelion/forms':
-        specifier: ^1.1.12
-        version: 1.1.12(vite@7.3.1(@types/node@24.10.10)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0))
+        specifier: ^1.1.28
+        version: 1.1.28(vite@7.3.1(@types/node@24.10.10)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0))
       '@saintrelion/notifications':
         specifier: ^1.0.2
         version: 1.0.2
@@ -1907,8 +1907,8 @@ packages:
   '@saintrelion/data-access-layer@5.0.9':
     resolution: {integrity: sha512-6IEOSl/8QNFb55L3yLfGxhNB/H18ZRvUhd/Scwf/hW1GJlEhHyMvzRIXKcc+7TLEsfV4Iz2D4MAcYL6XvCJqYw==, tarball: https://npm.pkg.github.com/download/@saintrelion/data-access-layer/5.0.9/ac1eeb221c45eb844b008ccb26b86dd1167588e2}
 
-  '@saintrelion/forms@1.1.12':
-    resolution: {integrity: sha512-JSdfePPdVEqhRSoFpFmJoLIWSTSrTEoO/aIRc6sf8ft+olcwVhSBDKB++OtQhUHvAPiXOlB3qYu6ZistJW+NJg==, tarball: https://npm.pkg.github.com/download/@saintrelion/forms/1.1.12/5d9eb04d83419289b25400345c7f891d1974f783}
+  '@saintrelion/forms@1.1.28':
+    resolution: {integrity: sha512-15ibJNmMR+stkehTjR7TSERmAZxcmNTQy55X4cnuE2S8+2xMy0IVWgIimsHxhIs/+8BlVKqwkp6zw7zAUqtgoA==, tarball: https://npm.pkg.github.com/download/@saintrelion/forms/1.1.28/feae6aaf86a7291c23b82a815a1b2651046eb2af}
 
   '@saintrelion/notifications@1.0.2':
     resolution: {integrity: sha512-3cM3EO1c2brCpTeaYf42txX3e3IoYIU5dHm59juXA23T3OmjEyWMSRVqnaMVVeGlfi2q0K3Y4kznCu5wxWUfMA==, tarball: https://npm.pkg.github.com/download/@saintrelion/notifications/1.0.2/84787b46fa243c7155ca79f3df978cfd57fa5fb5}
@@ -6308,7 +6308,7 @@ snapshots:
       - react
       - react-dom
 
-  '@saintrelion/forms@1.1.12(vite@7.3.1(@types/node@24.10.10)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0))':
+  '@saintrelion/forms@1.1.28(vite@7.3.1(@types/node@24.10.10)(jiti@2.6.1)(lightningcss@1.30.2)(terser@5.46.0))':
     dependencies:
       '@fortawesome/fontawesome-free': 7.1.0
       '@radix-ui/react-dialog': 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.11))(@types/react@19.2.11)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
