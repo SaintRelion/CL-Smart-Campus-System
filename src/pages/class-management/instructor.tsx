@@ -19,6 +19,7 @@ import { RenderDataCore } from "@saintrelion/ui";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Trash2 } from "lucide-react";
+import { ScheduleGrid } from "@/components/class-management/ScheduleGrid";
 
 const days = [
   "Monday",
@@ -38,21 +39,23 @@ const InstructorClassManagement = () => {
     useInsert: classesInsert,
     useDelete: classesDelete,
   } = useDBOperationsLocked<ClassSubject>("ClassSubject");
-  const { data: classes = [] } = classesSelect({
-    firebaseOptions: { filterField: "employeeId", value: user.employeeId },
-    mockOptions: { filterFn: (c) => c.employeeId === user.employeeId },
-  });
+
+  const { data: classes = [] } = classesSelect();
+  const myClasses = classes.filter((c) => c.employeeId === user.employeeId);
+  const otherClasses = classes.filter((c) => c.employeeId !== user.employeeId);
 
   const currentYear = new Date().getFullYear();
-
   const yearOptions = Array.from({ length: 5 }, (_, i) =>
     String(currentYear - i),
   );
 
   const [selectedSemester, setSelectedSemester] = useState("all");
   const [selectedYear, setSelectedYear] = useState(currentYear.toString());
+  const [selectedDays, setSelectedDays] = useState<string[]>([]);
+  const [selectedTime, setSelectedTime] = useState("");
+  const [conflict, setConflict] = useState(false);
 
-  const filteredClasses = classes.filter((cls) => {
+  const filteredMyClasses = myClasses.filter((cls) => {
     const matchesSemester =
       selectedSemester === "all" || cls.semester === selectedSemester;
 
@@ -61,12 +64,25 @@ const InstructorClassManagement = () => {
     return matchesSemester && matchesYear;
   });
 
+  const filteredOtherClasses = otherClasses.filter(
+    (cls) =>
+      (selectedSemester === "all" || cls.semester === selectedSemester) &&
+      (selectedYear === "all" || cls.year === selectedYear),
+  );
+
+  // Conflict checker
+  const hasConflict = (time: string, days: string[]) => {
+    return filteredOtherClasses.some(
+      (cls) => cls.time === time && cls.days.some((d) => days.includes(d)),
+    );
+  };
+
   const handleAddClass = (data: Record<string, string>) => {
-    console.log(data);
-    classesInsert.run({
-      ...data,
-      employeeId: user.employeeId,
-    });
+    if (conflict) {
+      alert("⚠️ Cannot create class: time conflict detected!");
+      return;
+    }
+    classesInsert.run({ ...data, employeeId: user.employeeId });
   };
 
   return (
@@ -78,58 +94,110 @@ const InstructorClassManagement = () => {
           <DialogTrigger asChild>
             <Button>Add New Class</Button>
           </DialogTrigger>
-          <DialogContent>
+
+          {/* WIDER DIALOG */}
+          <DialogContent className="max-w-6xl!">
             <DialogHeader>
               <DialogTitle>Create New Class</DialogTitle>
               <DialogDescription>
                 Fill in the details to create your class.
               </DialogDescription>
             </DialogHeader>
-            <RenderForm wrapperClassName="space-y-5">
-              <div className="flex justify-around">
-                <RenderFormField
-                  field={{
-                    label: "Semester",
-                    type: "select",
-                    name: "semester",
-                    options: ["1st", "2nd"],
-                  }}
-                />{" "}
-                <RenderFormField
-                  field={{
-                    label: "Year",
-                    type: "select",
-                    name: "year",
-                    options: yearOptions,
-                  }}
-                />
+
+            <RenderForm>
+              {/* MAIN LAYOUT */}
+              <div className="flex gap-10">
+                {/* LEFT SIDE — FORM */}
+                <div className="flex-1 space-y-5">
+                  <div className="flex gap-4">
+                    <RenderFormField
+                      field={{
+                        label: "Semester",
+                        type: "select",
+                        name: "semester",
+                        options: ["1st", "2nd"],
+                        onValueChange: (value) => {
+                          setSelectedSemester(value as string);
+                        },
+                      }}
+                    />
+
+                    <RenderFormField
+                      field={{
+                        label: "Year",
+                        type: "select",
+                        name: "year",
+                        options: yearOptions,
+                        onValueChange: (value) => {
+                          setSelectedYear(value as string);
+                        },
+                      }}
+                    />
+                  </div>
+
+                  <RenderFormField
+                    field={{
+                      label: "Subject Title",
+                      type: "text",
+                      name: "title",
+                    }}
+                  />
+
+                  <RenderFormField
+                    field={{
+                      label: "Room",
+                      type: "text",
+                      name: "room",
+                    }}
+                  />
+
+                  <RenderFormField
+                    field={{
+                      label: "Days",
+                      type: "multi-select",
+                      name: "days",
+                      options: days,
+                      onValueChange: (value) => {
+                        const selected = value as string[];
+                        setSelectedDays(selected);
+                        setConflict(hasConflict(selectedTime, selected));
+                      },
+                    }}
+                  />
+
+                  <RenderFormField
+                    field={{
+                      label: "Time",
+                      type: "time",
+                      name: "time",
+                      onValueChange: (value) => {
+                        const time = value as string;
+                        setSelectedTime(time);
+                        setConflict(hasConflict(time, selectedDays));
+                        if (hasConflict(time, selectedDays)) {
+                          alert(
+                            "⚠️ Conflict detected! One or more selected days already have a class at this time.",
+                          );
+                        }
+                      },
+                    }}
+                  />
+
+                  <RenderFormButton
+                    buttonLabel="Create Class"
+                    isDisabled={classesInsert.isLocked || conflict}
+                    onSubmit={handleAddClass}
+                  />
+                </div>
+
+                {/* RIGHT SIDE — SCHEDULE GRID */}
+                <div className="w-[500px] overflow-auto">
+                  <ScheduleGrid
+                    otherClasses={filteredOtherClasses}
+                    selectedDays={selectedDays}
+                  />
+                </div>
               </div>
-              <RenderFormField
-                field={{
-                  label: "Subject Title",
-                  type: "text",
-                  name: "title",
-                }}
-              />
-              <RenderFormField
-                field={{ label: "Time", type: "time", name: "time" }}
-              />
-              <RenderFormField
-                field={{ label: "Room", type: "text", name: "room" }}
-              />
-              <RenderFormField
-                field={{
-                  label: "Days",
-                  type: "multi-select",
-                  name: "days",
-                  options: days,
-                }}
-              />
-              <RenderFormButton
-                buttonLabel="Create Class"
-                isDisabled={classesInsert.isLocked}
-                onSubmit={handleAddClass}
-              />
             </RenderForm>
           </DialogContent>
         </Dialog>
@@ -163,12 +231,12 @@ const InstructorClassManagement = () => {
             </select>
           </div>
         </div>
-        {filteredClasses.length == 0 ? (
+        {filteredMyClasses.length == 0 ? (
           <div className="text-gray-500 italic">No classes</div>
         ) : (
           <RenderDataCore
             ui={{ content: { wrapperClassName: "flex flex-col space-y-4" } }}
-            data={filteredClasses}
+            data={filteredMyClasses}
             renderItem={(item) => (
               <div className="flex items-center justify-between rounded-md p-4 shadow-xl">
                 <div className="">
