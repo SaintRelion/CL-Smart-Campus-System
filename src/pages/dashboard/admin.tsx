@@ -1,164 +1,222 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useDBOperationsLocked } from "@saintrelion/data-access-layer";
-import { formatReadableDate } from "@saintrelion/time-functions";
+import { formatReadableDate, isSameDay } from "@saintrelion/time-functions";
 import type { User } from "@/models/user";
 import type { AttendanceLog } from "@/models/attendance";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
+import type { ClassSubject } from "@/models/class-subject";
+import { AttendanceProgressBar } from "@/components/attendance/AttendanceProgressBar";
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsRightIcon,
+  Clock,
+  MapPin,
+} from "lucide-react";
 import { GeoViewer } from "../to-be-library/geo/GeoViewer";
-import { decodePath } from "../to-be-library/geo/lib/parser";
 import { useGeoStore } from "../to-be-library/geo/useGeoStore";
+import { decodePath } from "../to-be-library/geo/lib/parser";
 
 export default function AdminAttendancePage() {
-  // Instructor Select
   const { useSelect: usersSelect } = useDBOperationsLocked<User>("User");
-  const { data: users = [] } = usersSelect({});
-  const instructors = users.filter((u) => u.role != "admin");
-
-  // Instructor Attendance Select
   const { useSelect: attendanceSelect } =
     useDBOperationsLocked<AttendanceLog>("AttendanceLog");
-  const { data: attendanceLogs = [] } = attendanceSelect({});
+  const { useSelect: classesSelect } =
+    useDBOperationsLocked<ClassSubject>("ClassSubject");
 
   const [selectedInstructor, setSelectedInstructor] = useState<User | null>(
     null,
   );
-  const [selectedAttendanceLog, setSelectedAttendanceLog] =
-    useState<AttendanceLog | null>(null);
+  const [viewDate, setViewDate] = useState(new Date());
+  const [selectedSession, setSelectedSession] = useState<AttendanceLog | null>(
+    null,
+  );
 
-  const parsedPath = decodePath(selectedAttendanceLog?.pathMovement);
-  useEffect(() => {
-    useGeoStore.getState().setParsedPath(parsedPath);
-  }, [parsedPath]);
+  const { data: users = [] } = usersSelect({});
+  const { data: attendanceLogs = [] } = attendanceSelect({});
+  const { data: allSubjects = [] } = classesSelect({});
 
-  // Filter logs for instructor
-  const instructorLogs = useMemo(() => {
-    if (!selectedInstructor) return [];
-    return attendanceLogs.filter(
-      (log) => log.employeeId === selectedInstructor.employeeId,
+  const instructors = users.filter((u) => u.role !== "admin");
+
+  // Navigate Date
+  const changeDay = (offset: number) => {
+    const newDate = new Date(viewDate);
+    newDate.setDate(viewDate.getDate() + offset);
+    setViewDate(newDate);
+    setSelectedSession(null); // Reset map when day changes
+  };
+
+  // Filter Data for the Current View
+  const filteredData = useMemo(() => {
+    if (!selectedInstructor) return { logs: [], subjects: [] };
+    const dayName = viewDate.toLocaleDateString("en-US", { weekday: "long" });
+
+    const logs = attendanceLogs
+      .filter(
+        (log) =>
+          log.employeeId === selectedInstructor.employeeId &&
+          isSameDay(
+            formatReadableDate(log.createdAt),
+            formatReadableDate(viewDate.toISOString()),
+          ),
+      )
+      .sort(
+        (a, b) => new Date(a.timeIn).getTime() - new Date(b.timeIn).getTime(),
+      );
+
+    const subjects = allSubjects.filter(
+      (s) =>
+        s.employeeId === selectedInstructor.employeeId &&
+        s.days.includes(dayName),
     );
-  }, [attendanceLogs, selectedInstructor]);
 
-  // Group by day
-  const groupedLogs = useMemo(() => {
-    const groups: Record<string, AttendanceLog[]> = {};
-
-    instructorLogs.forEach((log) => {
-      const dayLabel = formatReadableDate(log.createdAt);
-
-      // Group by that day
-      if (!groups[dayLabel]) groups[dayLabel] = [];
-      groups[dayLabel].push(log);
-    });
-
-    return groups;
-  }, [instructorLogs]);
+    return { logs, subjects };
+  }, [attendanceLogs, allSubjects, selectedInstructor, viewDate]);
 
   return (
-    <div className="grid min-h-screen grid-cols-1 gap-6 p-6 md:grid-cols-3">
-      {/* LEFT: Instructor List */}
-      <div className="space-y-3">
-        <h2 className="mb-2 text-lg font-semibold">Instructors</h2>
-        {instructors.length === 0 ? (
-          <p className="text-gray-500">No instructors found.</p>
-        ) : (
-          instructors.map((inst) => (
+    <div className="grid min-h-screen grid-cols-1 gap-6 p-6 lg:grid-cols-4">
+      {/* LEFT: INSTRUCTOR SELECTION */}
+      <div className="space-y-4 lg:col-span-1">
+        <h2 className="flex items-center gap-2 text-lg font-bold">
+          <MapPin className="text-blue-500" /> Instructors
+        </h2>
+        <div className="max-h-[80vh] space-y-2 overflow-y-auto pr-2">
+          {instructors.map((inst) => (
             <div
               key={inst.id}
               onClick={() => {
                 setSelectedInstructor(inst);
-                setSelectedAttendanceLog(null);
+                setSelectedSession(null);
               }}
-              className={`cursor-pointer rounded-lg border p-4 transition hover:bg-gray-50 ${
+              className={`cursor-pointer rounded-xl border p-4 transition-all ${
                 selectedInstructor?.id === inst.id
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-gray-200"
+                  ? "border-blue-500 bg-blue-50 ring-2 ring-blue-100"
+                  : "bg-white hover:bg-gray-50"
               }`}
             >
-              <p className="font-medium">{inst.name}</p>
-              <p className="text-sm text-gray-500">{inst.department}</p>
-              <p className="text-xs text-gray-400">{inst.email}</p>
+              <p className="font-bold">{inst.name}</p>
+              <p className="text-xs text-gray-500">{inst.department}</p>
             </div>
-          ))
-        )}
+          ))}
+        </div>
       </div>
 
-      {/* RIGHT: Attendance Logs */}
-      <div className="col-span-2">
-        <h2 className="mb-4 text-lg font-semibold">
-          {selectedInstructor
-            ? `${selectedInstructor.name}'s Attendance`
-            : "Select an Instructor"}
-        </h2>
+      {/* RIGHT: AUDIT VIEWER */}
+      <div className="space-y-6 lg:col-span-3">
+        {/* DATE NAVIGATOR */}
+        <div className="flex items-center justify-between rounded-2xl border bg-white p-4 shadow-sm">
+          <button
+            onClick={() => changeDay(-1)}
+            className="rounded-lg p-2 hover:bg-gray-100"
+          >
+            <ChevronLeft />
+          </button>
+          <div className="text-center">
+            <h3 className="text-lg font-black">
+              {viewDate.toLocaleDateString("en-US", {
+                month: "long",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </h3>
+            <p className="text-xs font-bold text-blue-500 uppercase">
+              {viewDate.toLocaleDateString("en-US", { weekday: "long" })}
+            </p>
+          </div>
+          <button
+            onClick={() => changeDay(1)}
+            className="rounded-lg p-2 hover:bg-gray-100"
+          >
+            <ChevronRight />
+          </button>
+        </div>
 
-        {!selectedInstructor ? (
-          <p className="text-gray-500">
-            Choose an instructor from the left to view attendance logs.
-          </p>
-        ) : instructorLogs.length === 0 ? (
-          <p className="text-gray-500">No attendance logs found.</p>
-        ) : (
-          Object.entries(groupedLogs)
-            .sort(([a], [b]) => (a > b ? -1 : 1))
-            .map(([day, logs]) => (
-              <div key={day} className="mb-6">
-                <h3 className="mb-2 font-semibold text-gray-700">{day}</h3>
+        {selectedInstructor ? (
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+            {/* COLUMN 1: COVERAGE & SESSIONS */}
+            <div className="space-y-6">
+              {/* Coverage Progress Bars */}
+              <div className="rounded-2xl border bg-white p-6 shadow-sm">
+                <h4 className="mb-4 flex items-center gap-2 text-xs font-black text-gray-400 uppercase">
+                  <Calendar className="h-4 w-4" /> Schedule Coverage
+                </h4>
+                {filteredData.subjects.length > 0 ? (
+                  filteredData.subjects.map((sub) => (
+                    <AttendanceProgressBar
+                      key={sub.id}
+                      subject={sub}
+                      logs={filteredData.logs}
+                    />
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-400 italic">
+                    No classes scheduled.
+                  </p>
+                )}
+              </div>
+
+              {/* Session List */}
+              <div className="rounded-2xl border bg-white p-6 shadow-sm">
+                <h4 className="mb-4 flex items-center gap-2 text-xs font-black text-gray-400 uppercase">
+                  <Clock className="h-4 w-4" /> Session Logs
+                </h4>
                 <div className="space-y-2">
-                  {logs.map((log) => (
+                  {filteredData.logs.map((log) => (
                     <div
                       key={log.id}
-                      onClick={() => setSelectedAttendanceLog(log)}
-                      className="flex cursor-pointer justify-between rounded border bg-white p-3 shadow-sm hover:bg-gray-50"
+                      onClick={() => {
+                        setSelectedSession(log);
+                        useGeoStore
+                          .getState()
+                          .setParsedPath(decodePath(log.pathMovement));
+                      }}
+                      className={`flex cursor-pointer items-center justify-between rounded-xl border p-4 transition-all ${
+                        selectedSession?.id === log.id
+                          ? "border-blue-500 bg-blue-50"
+                          : "hover:bg-gray-50"
+                      }`}
                     >
-                      <span className="text-gray-700">
-                        Time In:{" "}
-                        <strong>
+                      <div className="text-sm">
+                        <p className="font-bold">
                           {new Date(log.timeIn).toLocaleTimeString([], {
                             hour: "2-digit",
                             minute: "2-digit",
-                          })}
-                        </strong>
-                      </span>
-                      <span className="text-gray-700">
-                        Time Out:{" "}
-                        <strong>
+                          })}{" "}
+                          -
                           {log.timeOut
                             ? new Date(log.timeOut).toLocaleTimeString([], {
                                 hour: "2-digit",
                                 minute: "2-digit",
                               })
-                            : "—"}
-                        </strong>
-                      </span>
+                            : " Active"}
+                        </p>
+                        <p className="text-[10px] tracking-widest text-gray-400 uppercase">
+                          Click to view path
+                        </p>
+                      </div>
+                      <ChevronsRightIcon
+                        className={`h-4 w-4 ${selectedSession?.id === log.id ? "text-blue-500" : "text-gray-300"}`}
+                      />
                     </div>
                   ))}
                 </div>
               </div>
-            ))
-        )}
-      </div>
+            </div>
 
-      {/* Attendance Map Viewer */}
-      {selectedAttendanceLog && (
-        <Dialog
-          open={!!selectedAttendanceLog}
-          onOpenChange={(open) => !open && setSelectedAttendanceLog(null)}
-        >
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Movement Path</DialogTitle>
-              <DialogDescription>{`View recorded GPS path for ${
-                selectedInstructor?.name ?? ""
-              }`}</DialogDescription>
-            </DialogHeader>
-
-            <div className="h-[450px] w-full">
+            {/* COLUMN 2: MAP VIEWER */}
+            <div className="sticky top-6 h-[600px] overflow-hidden rounded-2xl border bg-white shadow-sm">
+              <div className="flex items-center justify-between border-b bg-gray-50 p-4">
+                <span className="text-xs font-bold text-gray-500 uppercase">
+                  Movement Path
+                </span>
+                {selectedSession && (
+                  <span className="rounded bg-blue-100 px-2 py-1 text-[10px] font-bold text-blue-700">
+                    SESSION:{" "}
+                    {new Date(selectedSession.timeIn).toLocaleTimeString()}
+                  </span>
+                )}
+              </div>
               <GeoViewer
                 uiParameters={{
                   showDefaultControls: false,
@@ -167,9 +225,15 @@ export default function AdminAttendancePage() {
                 }}
               />
             </div>
-          </DialogContent>
-        </Dialog>
-      )}
+          </div>
+        ) : (
+          <div className="flex h-96 flex-col items-center justify-center rounded-2xl border-2 border-dashed bg-gray-50 text-gray-400">
+            <p className="text-lg font-medium">
+              Select an instructor to begin the audit.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

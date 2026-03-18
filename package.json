@@ -24,7 +24,7 @@
     "@saintrelion/auth-lib": "^4.2.8",
     "@saintrelion/cache": "^1.0.1",
     "@saintrelion/data-access-layer": "^5.0.9",
-    "@saintrelion/forms": "^1.1.28",
+    "@saintrelion/forms": "^1.1.31",
     "@saintrelion/notifications": "^1.0.2",
     "@saintrelion/routers": "^2.0.0",
     "@saintrelion/time-functions": "^1.0.2",

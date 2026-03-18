@@ -30,6 +30,12 @@ const days = [
   "Saturday",
   "Sunday",
 ];
+
+const toMins = (t: string) => {
+  const [h, m] = t.split(":").map(Number);
+  return h * 60 + m;
+};
+
 const InstructorClassManagement = () => {
   const { user } = useAuth();
 
@@ -40,9 +46,8 @@ const InstructorClassManagement = () => {
     useDelete: classesDelete,
   } = useDBOperationsLocked<ClassSubject>("ClassSubject");
 
-  const { data: classes = [] } = classesSelect();
-  const myClasses = classes.filter((c) => c.employeeId === user.employeeId);
-  const otherClasses = classes.filter((c) => c.employeeId !== user.employeeId);
+  const { data: allClasses = [] } = classesSelect();
+  const myClasses = allClasses.filter((c) => c.employeeId === user.employeeId);
 
   const currentYear = new Date().getFullYear();
   const yearOptions = Array.from({ length: 5 }, (_, i) =>
@@ -52,7 +57,10 @@ const InstructorClassManagement = () => {
   const [selectedSemester, setSelectedSemester] = useState("all");
   const [selectedYear, setSelectedYear] = useState(currentYear.toString());
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
-  const [selectedTime, setSelectedTime] = useState("");
+
+  const [selectedTimeIn, setSelectedTimeIn] = useState("08:00");
+  const [selectedTimeOut, setSelectedTimeOut] = useState("09:00");
+
   const [conflict, setConflict] = useState(false);
 
   const filteredMyClasses = myClasses.filter((cls) => {
@@ -64,17 +72,36 @@ const InstructorClassManagement = () => {
     return matchesSemester && matchesYear;
   });
 
-  const filteredOtherClasses = otherClasses.filter(
+  const allFilterClasses = allClasses.filter(
     (cls) =>
       (selectedSemester === "all" || cls.semester === selectedSemester) &&
       (selectedYear === "all" || cls.year === selectedYear),
   );
 
+  const isTimeInvalid = toMins(selectedTimeIn) >= toMins(selectedTimeOut);
   // Conflict checker
-  const hasConflict = (time: string, days: string[]) => {
-    return filteredOtherClasses.some(
-      (cls) => cls.time === time && cls.days.some((d) => days.includes(d)),
-    );
+  const hasConflict = (
+    timeIn: string,
+    timeOut: string,
+    selectedDays: string[],
+  ) => {
+    if (!timeIn || !timeOut || selectedDays.length === 0) return false;
+
+    const newStart = toMins(timeIn);
+    const newEnd = toMins(timeOut);
+
+    return allFilterClasses.some((cls) => {
+      const dayOverlap = cls.days.some((d) => selectedDays.includes(d));
+      if (!dayOverlap) return false;
+
+      const existStart = toMins(cls.time_in);
+      const existEnd = toMins(cls.time_out);
+
+      // EXCLUSIVE RANGE CONFLICT:
+      // Only conflicts if there is a real overlap.
+      // If New Start (10:00) == Exist End (10:00), this returns FALSE.
+      return newStart < existEnd && newEnd > existStart;
+    });
   };
 
   const handleAddClass = (data: Record<string, string>) => {
@@ -82,7 +109,15 @@ const InstructorClassManagement = () => {
       alert("⚠️ Cannot create class: time conflict detected!");
       return;
     }
-    classesInsert.run({ ...data, employeeId: user.employeeId });
+
+    const finalData = {
+      ...data,
+      time_in: selectedTimeIn,
+      time_out: selectedTimeOut,
+      employeeId: user.employeeId,
+    };
+
+    classesInsert.run(finalData);
   };
 
   return (
@@ -96,7 +131,7 @@ const InstructorClassManagement = () => {
           </DialogTrigger>
 
           {/* WIDER DIALOG */}
-          <DialogContent className="max-w-6xl!">
+          <DialogContent className="w-[95vw] max-w-7xl!">
             <DialogHeader>
               <DialogTitle>Create New Class</DialogTitle>
               <DialogDescription>
@@ -105,32 +140,27 @@ const InstructorClassManagement = () => {
             </DialogHeader>
 
             <RenderForm>
-              {/* MAIN LAYOUT */}
-              <div className="flex gap-10">
-                {/* LEFT SIDE — FORM */}
-                <div className="flex-1 space-y-5">
-                  <div className="flex gap-4">
+              {/* MAIN LAYOUT: 30% Form / 70% Grid */}
+              <div className="flex h-[70vh] gap-8 overflow-hidden">
+                {/* LEFT SIDE — FORM (Fixed Width 30%) */}
+                <div className="w-[30%] space-y-4 overflow-y-auto px-2 pr-2">
+                  <div className="grid grid-cols-2 gap-3">
                     <RenderFormField
                       field={{
                         label: "Semester",
                         type: "select",
                         name: "semester",
                         options: ["1st", "2nd"],
-                        onValueChange: (value) => {
-                          setSelectedSemester(value as string);
-                        },
+                        onValueChange: (v) => setSelectedSemester(v as string),
                       }}
                     />
-
                     <RenderFormField
                       field={{
                         label: "Year",
                         type: "select",
                         name: "year",
                         options: yearOptions,
-                        onValueChange: (value) => {
-                          setSelectedYear(value as string);
-                        },
+                        onValueChange: (v) => setSelectedYear(v as string),
                       }}
                     />
                   </div>
@@ -142,14 +172,64 @@ const InstructorClassManagement = () => {
                       name: "title",
                     }}
                   />
-
                   <RenderFormField
-                    field={{
-                      label: "Room",
-                      type: "text",
-                      name: "room",
-                    }}
+                    field={{ label: "Room", type: "text", name: "room" }}
                   />
+
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Time In Manual Field */}
+                    <div className="flex flex-col gap-1">
+                      <label className="text-sm font-semibold uppercase">
+                        Time In
+                      </label>
+                      <input
+                        type="time"
+                        list="time-steps"
+                        step="1800"
+                        value={selectedTimeIn}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSelectedTimeIn(val);
+                          setConflict(
+                            hasConflict(val, selectedTimeOut, selectedDays),
+                          );
+                        }}
+                        className="border-b border-black p-1 font-bold focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Time Out Manual Field */}
+                    <div className="flex flex-col gap-1">
+                      <label className="text-sm font-semibold uppercase">
+                        Time Out
+                      </label>
+                      <input
+                        type="time"
+                        list="time-steps"
+                        step="1800"
+                        value={selectedTimeOut}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSelectedTimeOut(val);
+                          setConflict(
+                            hasConflict(selectedTimeIn, val, selectedDays),
+                          );
+                        }}
+                        className="border-b border-black p-1 font-bold focus:outline-none"
+                      />
+                    </div>
+
+                    {/* The Secret Sauce: Datalist forces the popup to show 30-min intervals */}
+                    <datalist id="time-steps">
+                      {Array.from({ length: 48 }).map((_, i) => {
+                        const h = Math.floor(i / 2)
+                          .toString()
+                          .padStart(2, "0");
+                        const m = i % 2 === 0 ? "00" : "30";
+                        return <option key={i} value={`${h}:${m}`} />;
+                      })}
+                    </datalist>
+                  </div>
 
                   <RenderFormField
                     field={{
@@ -157,44 +237,46 @@ const InstructorClassManagement = () => {
                       type: "multi-select",
                       name: "days",
                       options: days,
-                      onValueChange: (value) => {
-                        const selected = value as string[];
+                      onValueChange: (v) => {
+                        const selected = v as string[];
                         setSelectedDays(selected);
-                        setConflict(hasConflict(selectedTime, selected));
+                        setConflict(
+                          hasConflict(
+                            selectedTimeIn,
+                            selectedTimeOut,
+                            selected,
+                          ),
+                        );
                       },
                     }}
                   />
 
-                  <RenderFormField
-                    field={{
-                      label: "Time",
-                      type: "time",
-                      name: "time",
-                      onValueChange: (value) => {
-                        const time = value as string;
-                        setSelectedTime(time);
-                        setConflict(hasConflict(time, selectedDays));
-                        if (hasConflict(time, selectedDays)) {
-                          alert(
-                            "⚠️ Conflict detected! One or more selected days already have a class at this time.",
-                          );
-                        }
-                      },
-                    }}
-                  />
+                  <div className="pt-4">
+                    {(conflict || isTimeInvalid) && (
+                      <p className="mb-2 text-xs font-bold tracking-tight text-red-500 uppercase">
+                        {isTimeInvalid
+                          ? "⚠️ Time Out must be later than Time In"
+                          : "⚠️ Conflict detected in schedule"}
+                      </p>
+                    )}
 
-                  <RenderFormButton
-                    buttonLabel="Create Class"
-                    isDisabled={classesInsert.isLocked || conflict}
-                    onSubmit={handleAddClass}
-                  />
+                    <RenderFormButton
+                      buttonLabel="Create Class"
+                      isDisabled={
+                        classesInsert.isLocked || conflict || isTimeInvalid
+                      }
+                      onSubmit={handleAddClass}
+                    />
+                  </div>
                 </div>
 
-                {/* RIGHT SIDE — SCHEDULE GRID */}
-                <div className="w-[500px] overflow-auto">
+                {/* RIGHT SIDE — SCHEDULE GRID (Flexible 70%) */}
+                <div className="flex-1 overflow-y-auto rounded-xl border bg-gray-50 p-4">
                   <ScheduleGrid
-                    otherClasses={filteredOtherClasses}
+                    allClasses={allFilterClasses}
                     selectedDays={selectedDays}
+                    // Pass selected range to show preview in grid
+                    previewRange={{ in: selectedTimeIn, out: selectedTimeOut }}
                   />
                 </div>
               </div>
@@ -243,7 +325,9 @@ const InstructorClassManagement = () => {
                   <div className="font-medium text-blue-600">{item.title}</div>
 
                   <p className="text-sm text-gray-600">
-                    {formatReadableTime(item.time)} • {item.room || "No Room"}
+                    {formatReadableTime(item.time_in)} –{" "}
+                    {formatReadableTime(item.time_out)} •{" "}
+                    {item.room || "No Room"}
                   </p>
 
                   <p className="text-xs text-gray-500">
