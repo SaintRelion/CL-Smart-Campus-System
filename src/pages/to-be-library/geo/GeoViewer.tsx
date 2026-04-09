@@ -24,7 +24,7 @@ function Recenter({ lat, lng }: { lat: number; lng: number }): null {
 export function GeoViewer(): JSX.Element {
   const coords = useGeoStore((s) => s.coords);
   const path = useGeoStore((s) => s.path);
-  const distance = useGeoStore((s) => s.distance);
+  // const distance = useGeoStore((s) => s.distance);
   const initTracking = useGeoStore((s) => s.initTracking);
 
   useEffect(() => {
@@ -69,9 +69,9 @@ export function GeoViewer(): JSX.Element {
             <p>
               Lat: {coords.lat.toFixed(6)}, Lng: {coords.lng.toFixed(6)}
             </p>
-            <p className="font-bold text-blue-600">
+            {/* <p className="font-bold text-blue-600">
               {(distance / 1000).toFixed(3)} km
-            </p>
+            </p> */}
           </div>
         ) : (
           <p>Waiting for location...</p>
