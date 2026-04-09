@@ -194,13 +194,7 @@ export default function InstructorAttendance() {
       {/* RIGHT: MAP & LOG DETAILS */}
       <div className="space-y-4 lg:col-span-2">
         <div className="relative h-[400px] overflow-hidden rounded-2xl border bg-white shadow-sm">
-          <GeoViewer
-            uiParameters={{
-              showDefaultControls: false,
-              showMap: true,
-              wrapperClass: "h-full w-full",
-            }}
-          />
+          <GeoViewer />
           <div className="absolute top-4 left-4 flex items-center gap-2 rounded-lg border bg-white/90 px-3 py-1.5 text-xs font-bold shadow-sm backdrop-blur">
             <MapIcon className="h-3 w-3 text-blue-500" />
             {selectedSession

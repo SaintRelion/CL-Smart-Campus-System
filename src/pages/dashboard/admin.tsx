@@ -167,6 +167,8 @@ export default function AdminAttendancePage() {
                       key={log.id}
                       onClick={() => {
                         setSelectedSession(log);
+
+                        console.log(log);
                         useGeoStore
                           .getState()
                           .setParsedPath(decodePath(log.pathMovement));
@@ -217,13 +219,7 @@ export default function AdminAttendancePage() {
                   </span>
                 )}
               </div>
-              <GeoViewer
-                uiParameters={{
-                  showDefaultControls: false,
-                  showMap: true,
-                  wrapperClass: "h-full w-full",
-                }}
-              />
+              <GeoViewer />
             </div>
           </div>
         ) : (
