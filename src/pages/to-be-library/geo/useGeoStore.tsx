@@ -1,10 +1,8 @@
 import { create } from "zustand";
-
 import { getDistance } from "geolib";
 import type { Coords, GeoState } from "./models/geo-state-model";
 
 export const useGeoStore = create<GeoState>((set, get) => ({
-  // STATES
   coords: null,
   path: [],
   distance: 0,
@@ -12,15 +10,10 @@ export const useGeoStore = create<GeoState>((set, get) => ({
   params: {},
   watchId: null,
 
-  // BEHAVIOR
   initTracking: () => {
     set({
       isRunning: false,
-      params: {
-        mode: "tracking",
-        highAccuracy: true,
-        minDistance: 3,
-      },
+      params: { mode: "tracking", highAccuracy: true, minDistance: 3 },
     });
     get().start();
   },
@@ -34,56 +27,50 @@ export const useGeoStore = create<GeoState>((set, get) => ({
       distance += getDistance(path[i - 1], path[i]);
     }
 
-    set({
-      path,
-      coords,
-      distance,
-    });
+    set({ path, coords, distance });
   },
 
   start: () => {
-    const { isRunning, params } = get();
-    if (isRunning) return;
+    const { isRunning, params, watchId } = get();
+    if (isRunning || watchId !== null) return;
 
-    if (!("geolocation" in navigator)) {
-      console.error("Geolocation not supported");
-      return;
-    }
+    if (!("geolocation" in navigator)) return;
 
     set({ isRunning: true });
 
+    // Single mode
     if (params.mode === "single") {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          set({ coords: p });
+          set({ coords: p, isRunning: false });
         },
-        (err) => console.error(err.message),
+        (err) => {
+          console.error(err.message);
+          set({ isRunning: false });
+        },
         { enableHighAccuracy: params.highAccuracy },
       );
-      set({ isRunning: false });
       return;
     }
 
+    // Tracking mode
     const id = navigator.geolocation.watchPosition(
       (pos) => {
+        const { path, distance, params: currentParams } = get();
         const newPoint = {
           lat: pos.coords.latitude,
           lng: pos.coords.longitude,
         };
-
-        const last = get().path.at(-1);
-        const min = params.minDistance ?? 1;
+        const last = path.at(-1);
+        const min = currentParams.minDistance ?? 1;
 
         if (!last || getDistance(last, newPoint) > min) {
-          console.log(newPoint);
-          set((s) => ({
+          set({
             coords: newPoint,
-            path: [...s.path, newPoint],
-            distance: last
-              ? s.distance + getDistance(last, newPoint)
-              : s.distance,
-          }));
+            path: [...path, newPoint],
+            distance: last ? distance + getDistance(last, newPoint) : distance,
+          });
         }
       },
       (err) => console.error(err.message),
@@ -91,24 +78,16 @@ export const useGeoStore = create<GeoState>((set, get) => ({
     );
 
     set({ watchId: id });
-    console.log("START");
-
-    if (params.autoStopAfterMs) {
-      setTimeout(() => get().stop(), params.autoStopAfterMs);
-    }
   },
 
-  // Stop behavior
   stop: () => {
     const { watchId } = get();
     if (watchId !== null) {
       navigator.geolocation.clearWatch(watchId);
-      set({ isRunning: false, watchId: null });
     }
-    console.log("STOPPED");
+    set({ isRunning: false, watchId: null });
   },
 
-  // Reset behavior
   reset: () => {
     get().stop();
     set({ coords: null, path: [], distance: 0 });
