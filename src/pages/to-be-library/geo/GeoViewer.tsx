@@ -1,16 +1,10 @@
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Polyline,
-  useMap,
-} from "react-leaflet";
+// GeoViewer.tsx
+import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { useEffect, type JSX } from "react";
 import { useGeoStore } from "./useGeoStore";
 
-// Move icon outside to prevent re-creation on every render
 const markerIcon: L.Icon = L.icon({
   iconUrl: "/my-marker.png",
   iconSize: [40, 35],
@@ -20,7 +14,9 @@ const markerIcon: L.Icon = L.icon({
 function Recenter({ lat, lng }: { lat: number; lng: number }): null {
   const map = useMap();
   useEffect(() => {
-    map.setView([lat, lng], map.getZoom());
+    if (lat !== 0 && lng !== 0) {
+      map.setView([lat, lng], map.getZoom());
+    }
   }, [lat, lng, map]);
   return null;
 }
@@ -29,12 +25,13 @@ export function GeoViewer(): JSX.Element {
   const coords = useGeoStore((s) => s.coords);
   const path = useGeoStore((s) => s.path);
   const distance = useGeoStore((s) => s.distance);
-
   const initTracking = useGeoStore((s) => s.initTracking);
 
   useEffect(() => {
-    initTracking(); // Auto-starts when component mounts
+    initTracking();
   }, [initTracking]);
+
+  console.log(path);
 
   return (
     <div className="flex flex-col items-center gap-4 rounded bg-white p-4 shadow">
@@ -54,24 +51,28 @@ export function GeoViewer(): JSX.Element {
             </>
           )}
 
-          {path.length > 1 && (
+          {/* Fixed Polyline: mapping the object array to Leaflet's [lat, lng] array */}
+          {/* {path.length > 1 && (
             <Polyline
               positions={path.map((p) => [p.lat, p.lng])}
               color="blue"
               weight={4}
+              opacity={0.7}
             />
-          )}
+          )} */}
         </MapContainer>
       </div>
 
       <div className="w-full text-sm text-gray-600">
         {coords ? (
-          <>
+          <div className="flex justify-between">
             <p>
               Lat: {coords.lat.toFixed(6)}, Lng: {coords.lng.toFixed(6)}
             </p>
-            <p>Distance: {(distance / 1000).toFixed(3)} km</p>
-          </>
+            <p className="font-bold text-blue-600">
+              {(distance / 1000).toFixed(3)} km
+            </p>
+          </div>
         ) : (
           <p>Waiting for location...</p>
         )}
