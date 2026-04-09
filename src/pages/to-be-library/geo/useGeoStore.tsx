@@ -19,15 +19,21 @@ export const useGeoStore = create<GeoState>((set, get) => ({
   },
 
   setParsedPath: (parsedPath?: Coords[]) => {
-    const path = parsedPath ?? [];
-    const coords = path.length > 0 ? path[path.length - 1] : null;
+    const newPath: Coords[] = parsedPath ?? [];
 
-    let distance = 0;
-    for (let i = 1; i < path.length; i++) {
-      distance += getDistance(path[i - 1], path[i]);
+    // Calculate total distance for the loaded path
+    let totalDistance: number = 0;
+    for (let i = 1; i < newPath.length; i++) {
+      totalDistance += getDistance(newPath[i - 1], newPath[i]);
     }
 
-    set({ path, coords, distance });
+    set({
+      path: newPath,
+      // Set current view to the last point of the loaded path
+      coords: newPath.length > 0 ? newPath[newPath.length - 1] : null,
+      distance: totalDistance,
+      isRunning: false, // Stop tracking if we are viewing a historical log
+    });
   },
 
   start: () => {
