@@ -4,6 +4,15 @@ React/Vite frontend for the Smart Campus system. It uses the SaintRelion
 client libraries and currently uses Firebase as the fast
 development/testing data provider.
 
+## Key features
+
+- **WebAuthn / passkey authentication** — device-based authentication using the browser WebAuthn API, with email OTP used during initial security enrollment.
+- **Class and schedule management** — instructors can create and manage classes by semester, year, day, room, and time, with validation that blocks overlapping schedules.
+- **GPS attendance tracking** — instructor attendance sessions can record a live geolocation movement path, with previous sessions viewable on a map.
+- **Attendance coverage** — compares attendance sessions against scheduled classes and provides daily/session history for instructors and administrators.
+- **Role-based workflows** — separate access and views for administrators, instructors, and part-time instructors.
+- **Instructor administration** — administrators can register and manage instructor accounts.
+
 ## Stack
 
 React 19, TypeScript, Vite, Firebase/Firestore, SaintRelion libraries,
