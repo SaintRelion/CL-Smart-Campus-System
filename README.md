@@ -114,3 +114,11 @@ Vite build; the `.env` file itself is not copied into the final Nginx
 image.
 
 See the backend README for the one-command full-stack Docker setup.
+
+## Author
+
+**June Aurelius Jacinto**  
+Full-Stack Software Developer
+
+GitHub: https://github.com/SaintRelion
+
