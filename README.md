@@ -1,69 +1,116 @@
-# React + TypeScript + Vite
+# Smart Campus Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React/Vite frontend for the Smart Campus system. It uses the SaintRelion
+client libraries and currently uses Firebase as the fast
+development/testing data provider.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+React 19, TypeScript, Vite, Firebase/Firestore, SaintRelion libraries,
+Tailwind CSS, TanStack Query, React Router, and Nginx for Docker.
 
-## Expanding the ESLint configuration
+## Access to private dependencies
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+This project depends on private SaintRelion packages. The required access keys/tokens are **not included in this repository**.
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+If you need access to build or run the project, please contact the developer to request the required keys.
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+## Setup
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Requirements: Node.js 22, pnpm/Corepack, access to the private
+`@saintrelion/*` GitHub Packages, and your own Firebase project.
+
+Keep the project `.npmrc` as:
+
+``` ini
+@saintrelion:registry=https://npm.pkg.github.com
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Configure your GitHub Packages token locally:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+``` bash
+pnpm config set --global "//npm.pkg.github.com/:_authToken" "YOUR_TOKEN"
 ```
+
+Copy `.env.example` to `.env` and provide your own values:
+
+``` env
+VITE_API_URL=http://localhost:8000/
+
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+VITE_FIREBASE_MEASUREMENT_ID=
+```
+
+Then:
+
+``` bash
+corepack enable
+pnpm install
+pnpm dev
+```
+
+`.env` is untracked. Each developer should use their own environment
+configuration.
+
+## Firebase note
+
+Firebase is used here primarily for rapid development/testing. This
+project may use permissive Firestore rules during private development;
+**`allow all` rules must not be used for a public production
+deployment.**
+
+The Firebase client SDK can be used in production with properly
+configured Firebase Authentication and Firestore Security Rules.
+Alternatively, migrate data access to the API provider for a
+server-mediated production setup.
+
+`VITE_*` values are compiled into the browser application, so never
+place private server credentials, GitHub tokens, database passwords,
+Firebase Admin credentials, or other secrets in them.
+
+## First administrator
+
+For a fresh/restored installation, open:
+
+``` text
+/setup-admin
+```
+
+Create the first administrator, then sign in through `/login`. The
+existing application flow will handle email OTP and fingerprint/WebAuthn
+enrollment.
+
+After the first administrator is created, remove the temporary bootstrap
+page and route:
+
+``` text
+src/pages/authentication/SetupAdmin.tsx
+```
+
+and remove the `/setup-admin` import/route from `src/navigations.tsx`.
+
+Do not leave the bootstrap route enabled on a public deployment.
+
+## Docker
+
+The complete application is run from the sibling **Django-SmartCampus**
+repository, where `docker-compose.yml` is stored.
+
+Expected layout:
+
+``` text
+SmartCampus/
+├── CL-Smart-Campus-System/
+└── Django-SmartCampus/
+```
+
+The Docker build reads this repository's `.env` temporarily during the
+Vite build; the `.env` file itself is not copied into the final Nginx
+image.
+
+See the backend README for the one-command full-stack Docker setup.

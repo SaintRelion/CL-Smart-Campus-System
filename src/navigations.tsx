@@ -7,6 +7,7 @@ import InstructorRegistrationPage from "./pages/instructor-registration/Instruct
 
 import { ProtectedRoute } from "@saintrelion/auth-lib";
 import { registerGroupAppRoutes, createAppRouter } from "@saintrelion/routers";
+import SetupAdmin from "./pages/authentication/SetupAdmin";
 // ✅ Register protected routes (with layout)
 registerGroupAppRoutes({
   layout: (
@@ -19,6 +20,7 @@ registerGroupAppRoutes({
   children: [
     // PUBLIC
     { path: "/login", public: true, element: <LoginPage /> },
+    { path: "/setup-admin", public: true, element: <SetupAdmin /> },
     // RESTRICTED
     {
       index: true,
