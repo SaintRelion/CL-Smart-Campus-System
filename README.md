@@ -1,128 +1,122 @@
 # Smart Campus Frontend
 
-React/Vite frontend for the Smart Campus system. It uses the SaintRelion
-client libraries and currently uses Firebase as the fast
-development/testing data provider.
+React/Vite frontend for the **Smart Campus** system. It provides the browser interface for authentication, instructor administration, class scheduling, attendance tracking, and role-specific workflows.
 
 ## Key features
 
-- **WebAuthn / passkey authentication** — device-based authentication using the browser WebAuthn API, with email OTP used during initial security enrollment.
-- **Class and schedule management** — instructors can create and manage classes by semester, year, day, room, and time, with validation that blocks overlapping schedules.
-- **GPS attendance tracking** — instructor attendance sessions can record a live geolocation movement path, with previous sessions viewable on a map.
-- **Attendance coverage** — compares attendance sessions against scheduled classes and provides daily/session history for instructors and administrators.
+- **WebAuthn / passkey authentication** — device-based authentication with email OTP during initial security enrollment.
+- **Class and schedule management** — create and manage classes by semester, year, day, room, and time, with validation for overlapping schedules.
+- **GPS attendance tracking** — records live instructor geolocation paths during attendance sessions and displays previous sessions on a map.
+- **Attendance coverage** — compares attendance sessions against scheduled classes and provides daily/session history.
 - **Role-based workflows** — separate access and views for administrators, instructors, and part-time instructors.
 - **Instructor administration** — administrators can register and manage instructor accounts.
 
-## Stack
+## Screenshots
 
-React 19, TypeScript, Vite, Firebase/Firestore, SaintRelion libraries,
-Tailwind CSS, TanStack Query, React Router, and Nginx for Docker.
+> Screenshots will be added after the local environment is restored.
+
+<!-- Suggested screenshots:
+1. Login / WebAuthn enrollment
+2. Main dashboard
+3. Class and schedule management
+4. Live GPS attendance
+5. Attendance history / map
+6. Instructor administration
+-->
+
+## Technology stack
+
+- React 19 + TypeScript
+- Vite
+- Tailwind CSS
+- TanStack Query
+- React Router
+- Firebase / Firestore
+- SaintRelion client libraries
+- Nginx for the Docker frontend
+
+Firebase is currently used as the fast development/testing data provider. The client architecture can also use the API provider for a server-mediated setup.
 
 ## Access to private dependencies
 
-This project depends on private SaintRelion packages. The required access keys/tokens are **not included in this repository**.
+This project depends on private `@saintrelion/*` packages. Required access tokens are **not included in the repository**.
 
-If you need access to build or run the project, please contact the developer to request the required keys.
+Contact the developer for the required package access before building the project.
 
-## Setup
+## Run Smart Campus
 
-Requirements: Node.js 22, pnpm/Corepack, access to the private
-`@saintrelion/*` GitHub Packages, and your own Firebase project.
+The complete application is started from the sibling **Django-SmartCampus** repository, which owns the Docker Compose configuration.
 
-Keep the project `.npmrc` as:
+Keep the two repositories beside each other:
 
-``` ini
-@saintrelion:registry=https://npm.pkg.github.com
-```
-
-Configure your GitHub Packages token locally:
-
-``` bash
-pnpm config set --global "//npm.pkg.github.com/:_authToken" "YOUR_TOKEN"
-```
-
-Copy `.env.example` to `.env` and provide your own values:
-
-``` env
-VITE_API_URL=http://localhost:8000/
-
-VITE_FIREBASE_API_KEY=
-VITE_FIREBASE_AUTH_DOMAIN=
-VITE_FIREBASE_PROJECT_ID=
-VITE_FIREBASE_STORAGE_BUCKET=
-VITE_FIREBASE_MESSAGING_SENDER_ID=
-VITE_FIREBASE_APP_ID=
-VITE_FIREBASE_MEASUREMENT_ID=
-```
-
-Then:
-
-``` bash
-corepack enable
-pnpm install
-pnpm dev
-```
-
-`.env` is untracked. Each developer should use their own environment
-configuration.
-
-## Firebase note
-
-Firebase is used here primarily for rapid development/testing. This
-project may use permissive Firestore rules during private development;
-**`allow all` rules must not be used for a public production
-deployment.**
-
-The Firebase client SDK can be used in production with properly
-configured Firebase Authentication and Firestore Security Rules.
-Alternatively, migrate data access to the API provider for a
-server-mediated production setup.
-
-`VITE_*` values are compiled into the browser application, so never
-place private server credentials, GitHub tokens, database passwords,
-Firebase Admin credentials, or other secrets in them.
-
-## First administrator
-
-For a fresh/restored installation, open:
-
-``` text
-/setup-admin
-```
-
-Create the first administrator, then sign in through `/login`. The
-existing application flow will handle email OTP and fingerprint/WebAuthn
-enrollment.
-
-After the first administrator is created, remove the temporary bootstrap
-page and route:
-
-``` text
-src/pages/authentication/SetupAdmin.tsx
-```
-
-and remove the `/setup-admin` import/route from `src/navigations.tsx`.
-
-Do not leave the bootstrap route enabled on a public deployment.
-
-## Docker
-
-The complete application is run from the sibling **Django-SmartCampus**
-repository, where `docker-compose.yml` is stored.
-
-Expected layout:
-
-``` text
+```text
 SmartCampus/
 ├── CL-Smart-Campus-System/
 └── Django-SmartCampus/
 ```
 
-The Docker build reads this repository's `.env` temporarily during the
-Vite build; the `.env` file itself is not copied into the final Nginx
-image.
+Configure this frontend using its provided `.env.example`, then configure the backend as described in the Django-SmartCampus README.
 
-See the backend README for the one-command full-stack Docker setup.
+From `Django-SmartCampus`:
+
+```powershell
+docker compose up -d --build
+```
+
+The Docker frontend is then available at:
+
+```text
+http://localhost:8080
+```
+
+The frontend `.env` is used during the Vite build and is not copied into the final Nginx image.
+
+## First administrator
+
+For a fresh/restored installation, open:
+
+```text
+/setup-admin
+```
+
+Create the first administrator, then sign in through `/login`. The application handles the existing email OTP and WebAuthn/passkey enrollment flow.
+
+After the first administrator has been created, remove or disable the temporary `/setup-admin` route before public deployment.
+
+## Firebase and client configuration
+
+Use `.env.example` as the reference for the frontend values that need to be configured.
+
+`VITE_*` values are compiled into the browser application. Do not place server credentials, GitHub tokens, database passwords, Firebase Admin credentials, or other private server secrets in them.
+
+If Firebase is used beyond private development, configure appropriate Firebase Authentication and Firestore Security Rules. Permissive development rules should not be used for a public deployment.
+
+## Local setup
+
+This section is only needed when running the frontend directly instead of through Docker.
+
+Requirements:
+
+- Node.js 22
+- pnpm / Corepack
+- Access to the private `@saintrelion/*` GitHub Packages
+- The required frontend configuration from `.env.example`
+
+Keep the repository `.npmrc` pointed at GitHub Packages and configure your package token locally:
+
+```powershell
+pnpm config set --global "//npm.pkg.github.com/:_authToken" "YOUR_TOKEN"
+```
+
+Then:
+
+```powershell
+corepack enable
+pnpm install
+pnpm dev
+```
+
+The local Vite development server runs separately from the Docker frontend. When using WebAuthn locally, make sure the backend `ORIGIN` matches the frontend's local origin.
 
 ## Author
 
@@ -130,4 +124,3 @@ See the backend README for the one-command full-stack Docker setup.
 Full-Stack Software Developer
 
 GitHub: https://github.com/SaintRelion
-
